@@ -1,4 +1,4 @@
-package com.bot.chataibot.config;
+package com.bot.chat_ai_bot.config;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
@@ -17,7 +17,7 @@ public class DotenvPostProcessor implements EnvironmentPostProcessor {
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
         Dotenv dotenv = Dotenv.configure()
                 // should be all path for locally running
-                .directory("ChatAiBot")
+                .directory(".")
                 .filename(".env")
                 .load();
         Map<String, Object> envMap = new HashMap<>();

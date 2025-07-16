@@ -1,4 +1,4 @@
-package com.bot.chataibot;
+package com.bot.chat_ai_bot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
