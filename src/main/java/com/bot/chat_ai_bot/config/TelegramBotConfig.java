@@ -20,5 +20,4 @@ public class TelegramBotConfig {
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
-
 }
