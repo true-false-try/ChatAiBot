@@ -1,23 +1,23 @@
 package com.bot.chat_ai_bot.config;
 
+import com.bot.chat_ai_bot.service.impl.TelegramBotServiceImpl;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
+import org.telegram.telegrambots.meta.TelegramBotsApi;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 @Getter
 @Configuration
 @RequiredArgsConstructor
 public class TelegramBotConfig {
-    @Value("${bot.name}")
-    private String botName;
-    @Value("${bot.key}")
-    private String botKey;
 
     @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
+    public TelegramBotsApi telegramBotsApi(TelegramBotServiceImpl bot) throws TelegramApiException {
+        TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
+        botsApi.registerBot(bot);
+        return botsApi;
     }
 }
