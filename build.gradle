@@ -28,25 +28,25 @@ ext {
     dotenvVersion = "3.1.0"
     geminiVersion = "1.8.0"
     aiSpringVersion = "1.0.0"
-    aiSpringVersion = "1.0.0"
-    telgramVersion = "6.9.7.1"
+    telegramVersion = "6.9.7.1"
 }
 
+
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("com.google.genai:google-genai:$geminiVersion")
-    implementation("io.github.cdimascio:dotenv-java:$dotenvVersion")
-    implementation("org.springframework.ai:spring-ai-starter-model-openai:$aiSpringVersion")
-    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
-    implementation("org.telegram:telegrambots:6.9.7.1")
-    compileOnly("org.projectlombok:lombok")
-    developmentOnly("org.springframework.boot:spring-boot-docker-compose")
-    developmentOnly("org.springframework.ai:spring-ai-spring-boot-docker-compose")
-    annotationProcessor("org.projectlombok:lombok")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    developmentOnly("org.springframework.ai:spring-ai-spring-boot-docker-compose:$aiSpringVersion")
+    implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation "com.google.genai:google-genai:$geminiVersion"
+    implementation "io.github.cdimascio:dotenv-java:$dotenvVersion"
+    implementation "org.springframework.boot:spring-boot-starter-data-mongodb"
+    implementation "org.springframework.boot:spring-boot-starter-data-redis"
+    implementation "org.telegram:telegrambots:$telegramVersion"
+
+    compileOnly "org.projectlombok:lombok"
+    annotationProcessor "org.projectlombok:lombok"
+
+    developmentOnly "org.springframework.boot:spring-boot-docker-compose"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 
