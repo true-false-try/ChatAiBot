@@ -1,5 +1,6 @@
 package com.bot.chat_ai_bot.service.impl;
 
+import com.bot.chat_ai_bot.service.GeminiService;
 import com.bot.chat_ai_bot.service.TelegramBotService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +14,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.Map;
 
-
 @Service
 @RequiredArgsConstructor
 public class TelegramBotServiceImpl extends TelegramLongPollingBot implements TelegramBotService {
@@ -22,6 +22,8 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
 
     @Value("${telegram.bot.name}")
     private String botName;
+
+    private final GeminiService geminiService;
 
     @Override
     public void update(Map<String, Object> updateMap) {}
@@ -34,7 +36,7 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
                 SendMessage outMessage = new SendMessage();
 
                 outMessage.setChatId(inMessage.getChatId());
-                outMessage.setText(inMessage.getText());
+                outMessage.setText(geminiService.askGemini(inMessage.getText()));
 
                 execute(outMessage);
             } catch (TelegramApiException e) {
