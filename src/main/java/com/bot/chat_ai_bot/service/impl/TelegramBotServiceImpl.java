@@ -1,13 +1,13 @@
 package com.bot.chat_ai_bot.service.impl;
 
 import com.bot.chat_ai_bot.service.TelegramBotService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -17,29 +17,31 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class TelegramBotServiceImpl extends TelegramLongPollingBot implements TelegramBotService {
-
     @Value("${telegram.bot.token}")
     private String botToken;
 
     @Value("${telegram.bot.name}")
     private String botName;
 
-
     @Override
-    public void update(Map<String, Object> updateMap) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            Update update = mapper.convertValue(updateMap, Update.class);
-
-            Thread.ofVirtual().start(() -> processUpdate(update));
-        } catch (IllegalArgumentException e) {
-            System.err.println("Parsing error: " + e.getMessage());
-        }
-    }
+    public void update(Map<String, Object> updateMap) {}
 
     @Override
     public void onUpdateReceived(Update update) {
-        Thread.ofVirtual().start(() -> processUpdate(update));
+        if(update.hasMessage() && update.getMessage().hasText()) {
+            try {
+                Message inMessage = update.getMessage();
+                SendMessage outMessage = new SendMessage();
+
+                outMessage.setChatId(inMessage.getChatId());
+                outMessage.setText(inMessage.getText());
+
+                execute(outMessage);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
     }
 
     @Override
