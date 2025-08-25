@@ -8,8 +8,11 @@ import org.springframework.stereotype.Service;
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.stickers.Sticker;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.Map;
@@ -23,6 +26,9 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
     @Value("${telegram.bot.name}")
     private String botName;
 
+    @Value("${sticker.id}")
+    private String stickerId;
+
     private final GeminiService geminiService;
 
     @Override
@@ -34,7 +40,11 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
             try {
                 Message inMessage = update.getMessage();
                 SendMessage outMessage = new SendMessage();
+                SendSticker outSticker = new SendSticker();
 
+                outSticker.setChatId(inMessage.getChatId().toString());
+                outSticker.setSticker(new InputFile(stickerId));
+                execute(outSticker);
                 outMessage.setChatId(inMessage.getChatId());
                 outMessage.setText(geminiService.askGemini(inMessage.getText()));
 
