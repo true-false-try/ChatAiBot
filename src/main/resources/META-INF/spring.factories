@@ -1,1 +1,1 @@
-org.springframework.boot.env.EnvironmentPostProcessor=com.bot.chat_ai_bot.config.VaultPostProcessor
+org.springframework.boot.env.EnvironmentPostProcessor=com.bot.chat_ai_bot.config.vault.VaultPostProcessor
