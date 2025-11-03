@@ -1,6 +1,5 @@
 package com.bot.chat_ai_bot.config.vault;
 
-import jakarta.ws.rs.POST;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.context.annotation.Configuration;
