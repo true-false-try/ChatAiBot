@@ -1,11 +1,17 @@
 package com.bot.chat_ai_bot.config.vault;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.core.env.MapPropertySource;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.vault.authentication.UsernamePasswordAuthentication;
 import org.springframework.vault.authentication.UsernamePasswordAuthenticationOptions;
 import org.springframework.vault.client.VaultEndpoint;
@@ -44,7 +50,7 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
                         .password(vaultVariables.get(VAULT_PASSWORD))
                         .build();
 
-        RestTemplate restOperations = createInsecureRestTemplate();
+        RestTemplate restOperations = createRestTemplateTrustAllCerts();
 
         UsernamePasswordAuthentication authentication = new UsernamePasswordAuthentication(options, restOperations);
 
@@ -76,21 +82,20 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
 
     }
 
-    private RestTemplate createInsecureRestTemplate() {
+    // For test, disable check TLS certificate
+    private RestTemplate createRestTemplateTrustAllCerts() {
         try {
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, new javax.net.ssl.TrustManager[]{
-                    new javax.net.ssl.X509TrustManager() {
-                        public java.security.cert.X509Certificate[] getAcceptedIssuers() { return new java.security.cert.X509Certificate[0]; }
-                        public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-                        public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-                    }
-            }, new java.security.SecureRandom());
+            SSLContext sslContext = SSLContextBuilder
+                    .create()
+                    .loadTrustMaterial(new TrustSelfSignedStrategy())
+                    .build();
 
-            javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-            javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
+            HttpClient httpClient = HttpClients.custom()
+                    .setSSLContext(sslContext)
+                    .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+                    .build();
 
-            return new RestTemplate();
+            return new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
