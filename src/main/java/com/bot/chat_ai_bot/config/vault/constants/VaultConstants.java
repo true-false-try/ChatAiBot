@@ -2,6 +2,8 @@ package com.bot.chat_ai_bot.config.vault.constants;
 
 public class VaultConstants {
 
+    public static final String PROTOCOL_HTTPS = "https";
+
     //Credentials
     public static final String VAULT_HOST = "VAULT_HOST";
     public static final String VAULT_PORT = "VAULT_PORT";
