@@ -2,6 +2,8 @@ package com.bot.chat_ai_bot.config.vault.constants;
 
 public class VaultConstants {
 
+    public static final String USERPASS_SUFFIX = "auth/userpass/login/%s";
+
     public static final String PROTOCOL_HTTPS = "https";
 
     //Credentials

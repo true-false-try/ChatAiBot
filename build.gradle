@@ -30,7 +30,7 @@ ext {
     aiSpringVersion = "1.0.0"
     telegramVersion = "6.9.7.1"
     vaultVersion = "3.2.0"
-    $httpcomponentsVersion = "5.3"
+    httpcomponentsVersion = "5.2.1"
 }
 
 
@@ -43,6 +43,7 @@ dependencies {
     implementation "org.telegram:telegrambots:$telegramVersion"
     implementation "org.springframework.vault:spring-vault-core:$vaultVersion"
     implementation "org.apache.httpcomponents.client5:httpclient5:$httpcomponentsVersion"
+    implementation "org.apache.httpcomponents.core5:httpcore5-h2:$httpcomponentsVersion"
 
 
     compileOnly "org.projectlombok:lombok"
