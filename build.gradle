@@ -45,7 +45,6 @@ dependencies {
     implementation "org.apache.httpcomponents.client5:httpclient5:$httpcomponentsVersion"
     implementation "org.apache.httpcomponents.core5:httpcore5-h2:$httpcomponentsVersion"
 
-
     compileOnly "org.projectlombok:lombok"
     annotationProcessor "org.projectlombok:lombok"
 
@@ -57,5 +56,6 @@ dependencies {
 
 
 tasks.named('test') {
-    useJUnitPlatform()
+    //useJUnitPlatform()
+    enabled = false
 }

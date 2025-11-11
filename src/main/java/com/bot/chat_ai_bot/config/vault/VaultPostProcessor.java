@@ -1,5 +1,4 @@
 package com.bot.chat_ai_bot.config.vault;
-import com.bot.chat_ai_bot.config.vault.constants.VaultConstants;
 import com.bot.chat_ai_bot.config.vault.dto.VaultAuthUserpassRequestDto;
 import com.bot.chat_ai_bot.config.vault.dto.VaultAuthUserpassResponseDto;
 import com.bot.chat_ai_bot.config.vault.dto.VaultSecretsResponseDto;
@@ -7,15 +6,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
-import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
-import org.apache.hc.client5.http.ssl.TrustAllStrategy;
 import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -36,12 +34,15 @@ import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.PROTOCOL
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.URL_CONFIG_SUFFIX;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.URL_USERPASS_SUFFIX;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_CREDENTIAL_EXCEPTION;
+import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_CRT_PASSWORD;
+import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_CRT_PASSWORD_EXCEPTION;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_HOST;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_HOST_PORT_EXCEPTION;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_LOGIN;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_PASSWORD;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_PORT;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_SECRETS;
+import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_TRUST_STORE_PATH;
 
 
 @Slf4j
@@ -59,7 +60,7 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
 
         try {
             VaultEndpoint vaultEndpoint = getVaultEndpoint(host, port);
-            RestTemplate restTemplate = createRestTemplateTrustAllCerts();
+            RestTemplate restTemplate = createRestTemplateTrustVaultCertificate();
             ResponseEntity<VaultAuthUserpassResponseDto> responseClientToken = getClientToken(restTemplate, vaultEndpoint, login, password);
             log.debug("Login response has token");
 
@@ -73,8 +74,8 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
                 log.info("Vault secrets successfully added to Spring Environment");
             }
 
-        } catch (Exception e) {
-            throw new VaultException("Exception login for Vault: " + e.getMessage(), e);
+        } catch (Exception ex) {
+            throw new VaultException("Exception login for Vault: " + ex.getMessage(), ex);
         }
     }
 
@@ -86,11 +87,9 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
         return restTemplate.postForEntity(loginUrl, logInRequestDto, VaultAuthUserpassResponseDto.class);
     }
 
-    @SuppressWarnings("unchecked")
     private VaultSecretsResponseDto getKv2SecretWithToken(RestTemplate restTemplate,
                                                       VaultEndpoint vaultEndpoint,
                                                       String token) {
-
         HttpHeaders headers = new HttpHeaders();
         headers.set(HEADER_VAULT_TOKEN, token);
         String secretUrl = vaultEndpoint.createUriString(URL_CONFIG_SUFFIX);
@@ -120,16 +119,14 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
         return body;
     }
 
-    // For test, disable check TLS certificate
-    private RestTemplate createRestTemplateTrustAllCerts() {
+    private RestTemplate createRestTemplateTrustVaultCertificate() {
         try {
             SSLContext sslContext = SSLContextBuilder.create()
-                    .loadTrustMaterial(new TrustAllStrategy())
+                    .loadTrustMaterial(new ClassPathResource(VAULT_TRUST_STORE_PATH).getFile(), "admin123".toCharArray())
                     .build();
 
             var sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
                     .setSslContext(sslContext)
-                    .setHostnameVerifier(NoopHostnameVerifier.INSTANCE)
                     .build();
 
             var connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
@@ -141,8 +138,9 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
                     .build();
 
             return new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
-        } catch (Exception e) {
-            throw new RuntimeException("Exception when creating RestTemplate with custom certificate", e);
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Exception when creating RestTemplate with custom certificate", ex);
         }
     }
 
@@ -159,18 +157,21 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
         String password = System.getenv(VAULT_PASSWORD);
         String host = System.getenv(VAULT_HOST);
         String port = System.getenv(VAULT_PORT);
+        String crtPassword = System.getenv(VAULT_CRT_PASSWORD);
 
         if (login == null || password == null) {
             throw new IllegalStateException(String.format(VAULT_CREDENTIAL_EXCEPTION, VAULT_LOGIN, VAULT_PASSWORD));
         } else if (host == null || port == null) {
             throw new IllegalStateException(String.format(VAULT_HOST_PORT_EXCEPTION, VAULT_HOST, VAULT_PORT));
-        }
+        } else if (crtPassword == null)
+            throw new IllegalStateException(String.format(VAULT_CRT_PASSWORD_EXCEPTION, VAULT_CRT_PASSWORD));
 
         return new HashMap<>(Map.of(
                 VAULT_LOGIN, login,
                 VAULT_PASSWORD, password,
                 VAULT_HOST, host,
-                VAULT_PORT, port
+                VAULT_PORT, port,
+                VAULT_CRT_PASSWORD, crtPassword
         ));
     }
 
