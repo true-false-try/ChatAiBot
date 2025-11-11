@@ -1,5 +1,5 @@
 package com.bot.chat_ai_bot.config.vault.dto;
 
-    public record LogInRequestDto (
+    public record VaultAuthUserpassRequestDto(
         String password
     ) {}

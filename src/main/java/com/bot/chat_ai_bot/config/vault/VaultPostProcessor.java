@@ -1,6 +1,8 @@
 package com.bot.chat_ai_bot.config.vault;
-import com.bot.chat_ai_bot.config.vault.dto.LogInRequestDto;
-import com.bot.chat_ai_bot.config.vault.dto.LoginResponseDto;
+import com.bot.chat_ai_bot.config.vault.constants.VaultConstants;
+import com.bot.chat_ai_bot.config.vault.dto.VaultAuthUserpassRequestDto;
+import com.bot.chat_ai_bot.config.vault.dto.VaultAuthUserpassResponseDto;
+import com.bot.chat_ai_bot.config.vault.dto.VaultSecretsResponseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -9,35 +11,38 @@ import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
 import org.apache.hc.client5.http.ssl.TrustAllStrategy;
 import org.apache.hc.core5.ssl.SSLContextBuilder;
-import org.springframework.core.env.MapPropertySource;
-import org.apache.hc.client5.http.classic.HttpClient;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.http.HttpStatus;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.vault.authentication.TokenAuthentication;
+import org.springframework.vault.VaultException;
 import org.springframework.vault.client.VaultEndpoint;
-import org.springframework.vault.core.VaultKeyValueOperations;
-import org.springframework.vault.core.VaultKeyValueOperationsSupport;
-import org.springframework.vault.core.VaultTemplate;
 import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.SSLContext;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
+import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.HEADER_VAULT_TOKEN;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.PROTOCOL_HTTPS;
-import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.USERPASS_SUFFIX;
+import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.URL_CONFIG_SUFFIX;
+import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.URL_USERPASS_SUFFIX;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_CREDENTIAL_EXCEPTION;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_HOST;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_HOST_PORT_EXCEPTION;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_LOGIN;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_PASSWORD;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_PORT;
+import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_SECRETS;
+
 
 @Slf4j
 @Configuration
@@ -52,73 +57,67 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
         String login = vaultVariables.get(VAULT_LOGIN);
         String password = vaultVariables.get(VAULT_PASSWORD);
 
-        VaultEndpoint vaultEndpoint = new VaultEndpoint();
-        vaultEndpoint.setScheme(PROTOCOL_HTTPS);
-        vaultEndpoint.setHost(host);
-        vaultEndpoint.setPort(Integer.parseInt(port));
-
-        RestTemplate restTemplate = createRestTemplateTrustAllCerts();
-
-        String loginUrl = vaultEndpoint.createUriString(String.format(USERPASS_SUFFIX, login));
-        LogInRequestDto logInRequestDto = new LogInRequestDto(password);
-
         try {
-            ResponseEntity<LoginResponseDto> response = restTemplate.postForEntity(loginUrl, logInRequestDto, LoginResponseDto.class);
-            log.debug("✅ Login response: {}", response.getBody());
-            if (response.getStatusCode().is2xxSuccessful()) {
+            VaultEndpoint vaultEndpoint = getVaultEndpoint(host, port);
+            RestTemplate restTemplate = createRestTemplateTrustAllCerts();
+            ResponseEntity<VaultAuthUserpassResponseDto> responseClientToken = getClientToken(restTemplate, vaultEndpoint, login, password);
+            log.debug("Login response has token");
 
-                String clientToken = response.getBody().auth().clientToken();
+            if (responseClientToken.getStatusCode().is2xxSuccessful()) {
+                String clientToken = Objects.requireNonNull(responseClientToken.getBody()).auth().clientToken();
+                Map<String, Object> secrets = getKv2SecretWithToken(restTemplate, vaultEndpoint, clientToken)
+                        .data()
+                        .data();
 
-                Map<String, Object> secretMap = getKv2SecretWithToken(restTemplate, vaultEndpoint, clientToken,
-                        "ms-telegram-psy-chat-bot", "test-config");
-
-                if (secretMap != null && !secretMap.isEmpty()) {
-                    System.out.println("✅ secretMap = " + secretMap);
-                    environment.getPropertySources().addFirst(new MapPropertySource("vault-secrets", secretMap));
-                } else {
-                    System.err.println("⚠️ secret is empty or not found");
-                }
+                setEnvironment(secrets, environment);
+                log.info("Vault secrets successfully added to Spring Environment");
             }
 
         } catch (Exception e) {
-            throw new RuntimeException("❌ Exception login for Vault: " + e.getMessage(), e);
+            throw new VaultException("Exception login for Vault: " + e.getMessage(), e);
         }
     }
 
+
+    private  ResponseEntity<VaultAuthUserpassResponseDto> getClientToken(RestTemplate restTemplate, VaultEndpoint vaultEndpoint, String login, String password) {
+        String loginUrl = vaultEndpoint.createUriString(String.format(URL_USERPASS_SUFFIX, login));
+        VaultAuthUserpassRequestDto logInRequestDto = new VaultAuthUserpassRequestDto(password);
+
+        return restTemplate.postForEntity(loginUrl, logInRequestDto, VaultAuthUserpassResponseDto.class);
+    }
+
     @SuppressWarnings("unchecked")
-    private Map<String, Object> getKv2SecretWithToken(RestTemplate restTemplate,
+    private VaultSecretsResponseDto getKv2SecretWithToken(RestTemplate restTemplate,
                                                       VaultEndpoint vaultEndpoint,
-                                                      String token,
-                                                      String mount,
-                                                      String key) {
+                                                      String token) {
 
-        String url = vaultEndpoint.createUriString(mount + "/data/" + key);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HEADER_VAULT_TOKEN, token);
+        String secretUrl = vaultEndpoint.createUriString(URL_CONFIG_SUFFIX);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.set("X-Vault-Token", token);
-        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+        ResponseEntity<VaultSecretsResponseDto> resp = restTemplate.exchange(
+                secretUrl,
+                HttpMethod.GET,
+                entity,
+                VaultSecretsResponseDto.class
+        );
 
-        ResponseEntity<Map> resp = restTemplate.exchange(url, org.springframework.http.HttpMethod.GET, entity, Map.class);
+        if (!resp.getStatusCode().is2xxSuccessful()) {
+            int status = resp.getStatusCode().value();
+            if (status == 404)
+                throw new VaultException("Secret not found: " + URL_CONFIG_SUFFIX);
+            if (status == 403)
+                throw new VaultException("Forbidden: token has no access to " + URL_CONFIG_SUFFIX);
 
-        if (resp.getStatusCode().is2xxSuccessful()) {
-            Map<String, Object> body = resp.getBody();
-            if (body == null) return null;
-
-            Object dataObj = body.get("data");
-            if (!(dataObj instanceof Map)) return null;
-
-            Map<String, Object> dataMap = (Map<String, Object>) dataObj;
-            Object inner = dataMap.get("data");
-            if (!(inner instanceof Map)) return null;
-
-            return (Map<String, Object>) inner;
-        } else if (resp.getStatusCode().value() == 404) {
-            throw new RuntimeException("Secret not found: " + mount + "/" + key);
-        } else if (resp.getStatusCode().value() == 403) {
-            throw new RuntimeException("Forbidden: token has no access to " + mount + "/" + key);
-        } else {
-            throw new RuntimeException("Vault returned " + resp.getStatusCode() + " for " + url);
+            throw new VaultException("Vault returned " + resp.getStatusCode() + " for " + URL_CONFIG_SUFFIX);
         }
+
+        VaultSecretsResponseDto body = resp.getBody();
+        if (body == null || body.data() == null) {
+            throw new VaultException("Empty Vault response for " + URL_CONFIG_SUFFIX);
+        }
+        return body;
     }
 
     // For test, disable check TLS certificate
@@ -143,10 +142,17 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
 
             return new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
         } catch (Exception e) {
-            throw new RuntimeException("❌ Exception when creating RestTemplate with custom certificate", e);
+            throw new RuntimeException("Exception when creating RestTemplate with custom certificate", e);
         }
     }
 
+    private VaultEndpoint getVaultEndpoint(String host, String port) {
+        VaultEndpoint vaultEndpoint = new VaultEndpoint();
+        vaultEndpoint.setScheme(PROTOCOL_HTTPS);
+        vaultEndpoint.setHost(host);
+        vaultEndpoint.setPort(Integer.parseInt(port));
+        return vaultEndpoint;
+    }
 
     private Map <String, String> getVaultCredentialsAndHosAndPort() {
         String login = System.getenv(VAULT_LOGIN);
@@ -166,5 +172,11 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
                 VAULT_HOST, host,
                 VAULT_PORT, port
         ));
+    }
+
+    private void setEnvironment(Map<String, Object> secrets, ConfigurableEnvironment environment) {
+        environment.getPropertySources().addFirst(
+                new MapPropertySource(VAULT_SECRETS, secrets)
+        );
     }
 }
