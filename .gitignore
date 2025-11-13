@@ -37,6 +37,8 @@ out/
 .vscode/
 
 ## secured files ##
-src/main/resources/.env
+.env
 src/main/resources/security/vault.jks
+docker-compose.yaml
+
 
