@@ -8,8 +8,9 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
 import org.apache.hc.core5.ssl.SSLContextBuilder;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.springframework.boot.EnvironmentPostProcessor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
@@ -25,6 +26,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.SSLContext;
 
+import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -50,17 +52,18 @@ import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_TR
 public class VaultPostProcessor implements EnvironmentPostProcessor {
 
     @Override
-    public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+    public void postProcessEnvironment(@NotNull ConfigurableEnvironment environment, @NotNull SpringApplication application) {
         Map<String, String> vaultVariables = getVaultCredentialsAndHosAndPort();
 
         String host = vaultVariables.get(VAULT_HOST);
         String port = vaultVariables.get(VAULT_PORT);
         String login = vaultVariables.get(VAULT_LOGIN);
         String password = vaultVariables.get(VAULT_PASSWORD);
+        String passwordCrt = vaultVariables.get(VAULT_CRT_PASSWORD);
 
         try {
             VaultEndpoint vaultEndpoint = getVaultEndpoint(host, port);
-            RestTemplate restTemplate = createRestTemplateTrustVaultCertificate();
+            RestTemplate restTemplate = createRestTemplateTrustVaultCertificate(passwordCrt);
             ResponseEntity<VaultAuthUserpassResponseDto> responseClientToken = getClientToken(restTemplate, vaultEndpoint, login, password);
             log.debug("Login response has token");
 
@@ -119,10 +122,16 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
         return body;
     }
 
-    private RestTemplate createRestTemplateTrustVaultCertificate() {
+    private RestTemplate createRestTemplateTrustVaultCertificate(String passwordCrt) {
         try {
+
+            ClassPathResource resource = new ClassPathResource(VAULT_TRUST_STORE_PATH);
+
+            KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            trustStore.load(resource.getInputStream(), passwordCrt.toCharArray());
+
             SSLContext sslContext = SSLContextBuilder.create()
-                    .loadTrustMaterial(new ClassPathResource(VAULT_TRUST_STORE_PATH).getFile(), "admin123".toCharArray())
+                    .loadTrustMaterial(trustStore, null)
                     .build();
 
             var sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
