@@ -14,7 +14,7 @@ import org.springframework.boot.EnvironmentPostProcessor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -36,16 +36,15 @@ import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.PROTOCOL
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.URL_CONFIG_SUFFIX;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.URL_USERPASS_SUFFIX;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_CREDENTIAL_EXCEPTION;
-import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_CRT_PASSWORD;
-import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_CRT_PASSWORD_EXCEPTION;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_HOST;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_HOST_PORT_EXCEPTION;
+import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_JKS_EXCEPTION;
+import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_JKS_PASSWORD;
+import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_JKS_PATH;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_LOGIN;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_PASSWORD;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_PORT;
 import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_SECRETS;
-import static com.bot.chat_ai_bot.config.vault.constants.VaultConstants.VAULT_TRUST_STORE_PATH;
-
 
 @Slf4j
 @Configuration
@@ -59,11 +58,12 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
         String port = vaultVariables.get(VAULT_PORT);
         String login = vaultVariables.get(VAULT_LOGIN);
         String password = vaultVariables.get(VAULT_PASSWORD);
-        String passwordCrt = vaultVariables.get(VAULT_CRT_PASSWORD);
+        String jksPath = vaultVariables.get(VAULT_JKS_PATH);
+        String jksPassword = vaultVariables.get(VAULT_JKS_PASSWORD);
 
         try {
             VaultEndpoint vaultEndpoint = getVaultEndpoint(host, port);
-            RestTemplate restTemplate = createRestTemplateTrustVaultCertificate(passwordCrt);
+            RestTemplate restTemplate = createRestTemplateTrustVaultCertificate(jksPath,jksPassword);
             ResponseEntity<VaultAuthUserpassResponseDto> responseClientToken = getClientToken(restTemplate, vaultEndpoint, login, password);
             log.debug("Login response has token");
 
@@ -122,13 +122,13 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
         return body;
     }
 
-    private RestTemplate createRestTemplateTrustVaultCertificate(String passwordCrt) {
+    private RestTemplate createRestTemplateTrustVaultCertificate(String jksPath, String jksPassword) {
         try {
 
-            ClassPathResource resource = new ClassPathResource(VAULT_TRUST_STORE_PATH);
+            FileSystemResource resource = new FileSystemResource(jksPath);
 
             KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            trustStore.load(resource.getInputStream(), passwordCrt.toCharArray());
+            trustStore.load(resource.getInputStream(), jksPassword.toCharArray());
 
             SSLContext sslContext = SSLContextBuilder.create()
                     .loadTrustMaterial(trustStore, null)
@@ -166,21 +166,23 @@ public class VaultPostProcessor implements EnvironmentPostProcessor {
         String password = System.getenv(VAULT_PASSWORD);
         String host = System.getenv(VAULT_HOST);
         String port = System.getenv(VAULT_PORT);
-        String crtPassword = System.getenv(VAULT_CRT_PASSWORD);
+        String jksPath = System.getenv(VAULT_JKS_PATH);
+        String jksPassword = System.getenv(VAULT_JKS_PASSWORD);
 
         if (login == null || password == null) {
             throw new IllegalStateException(String.format(VAULT_CREDENTIAL_EXCEPTION, VAULT_LOGIN, VAULT_PASSWORD));
         } else if (host == null || port == null) {
             throw new IllegalStateException(String.format(VAULT_HOST_PORT_EXCEPTION, VAULT_HOST, VAULT_PORT));
-        } else if (crtPassword == null)
-            throw new IllegalStateException(String.format(VAULT_CRT_PASSWORD_EXCEPTION, VAULT_CRT_PASSWORD));
+        } else if (jksPath == null || jksPassword == null)
+            throw new IllegalStateException(String.format(VAULT_JKS_EXCEPTION, VAULT_JKS_PATH, VAULT_JKS_PASSWORD));
 
         return new HashMap<>(Map.of(
                 VAULT_LOGIN, login,
                 VAULT_PASSWORD, password,
                 VAULT_HOST, host,
                 VAULT_PORT, port,
-                VAULT_CRT_PASSWORD, crtPassword
+                VAULT_JKS_PATH, jksPath,
+                VAULT_JKS_PASSWORD, jksPassword
         ));
     }
 
