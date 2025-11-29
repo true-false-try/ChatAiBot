@@ -31,19 +31,22 @@ ext {
     telegramVersion = "6.9.7.1"
     vaultVersion = "3.2.0"
     httpcomponentsVersion = "5.3"
+    postgresVersion = "42.7.8"
+    springBootStarter = "4.0.0"
 }
 
 
 dependencies {
     implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa:$springBootStarter")
     implementation "com.google.genai:google-genai:$geminiVersion"
     implementation "io.github.cdimascio:dotenv-java:$dotenvVersion"
-    implementation "org.springframework.boot:spring-boot-starter-data-mongodb"
     implementation "org.springframework.boot:spring-boot-starter-data-redis"
     implementation "org.telegram:telegrambots:$telegramVersion"
     implementation "org.springframework.vault:spring-vault-core:$vaultVersion"
     implementation "org.apache.httpcomponents.client5:httpclient5:$httpcomponentsVersion"
     implementation "org.apache.httpcomponents.core5:httpcore5-h2:$httpcomponentsVersion"
+    implementation "org.postgresql:postgresql:$postgresVersion"
 
     compileOnly "org.projectlombok:lombok"
     annotationProcessor "org.projectlombok:lombok"
