@@ -1,18 +1,12 @@
-CREATE TABLE "user"
+CREATE TABLE "main_user"
 (
     id               DECIMAL NOT NULL,
-    first_name       VARCHAR(100),
-    last_name        VARCHAR(100),
-    user_name        VARCHAR(100),
-    created_at       BIGINT  NOT NULL,
+    first_name       VARCHAR(255),
+    last_name        VARCHAR(255),
+    user_name        VARCHAR(255),
+    created_at       BIGINT,
     last_interaction BIGINT,
-    age_group        VARCHAR(20),
-    user_mood_id     DECIMAL,
+    age_group        VARCHAR(255),
+    current_mood     VARCHAR(255),
     CONSTRAINT pk_user PRIMARY KEY (id)
 );
-
-ALTER TABLE "user"
-    ADD CONSTRAINT uc_user_user_mood UNIQUE (user_mood_id);
-
-ALTER TABLE "user"
-    ADD CONSTRAINT FK_USER_ON_USER_MOOD FOREIGN KEY (user_mood_id) REFERENCES user_mood (id);

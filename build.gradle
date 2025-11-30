@@ -32,13 +32,14 @@ ext {
     vaultVersion = "3.2.0"
     httpcomponentsVersion = "5.3"
     postgresVersion = "42.7.8"
-    springBootStarter = "4.0.0"
+    springBootStarterVersion = "4.0.0"
+    mapstructVersion = "1.6.3"
 }
 
 
 dependencies {
     implementation "org.springframework.boot:spring-boot-starter-web"
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa:$springBootStarter")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa:$springBootStarterVersion")
     implementation "com.google.genai:google-genai:$geminiVersion"
     implementation "io.github.cdimascio:dotenv-java:$dotenvVersion"
     implementation "org.springframework.boot:spring-boot-starter-data-redis"
@@ -47,9 +48,13 @@ dependencies {
     implementation "org.apache.httpcomponents.client5:httpclient5:$httpcomponentsVersion"
     implementation "org.apache.httpcomponents.core5:httpcore5-h2:$httpcomponentsVersion"
     implementation "org.postgresql:postgresql:$postgresVersion"
+    implementation("org.mapstruct:mapstruct:$mapstructVersion")
 
     compileOnly "org.projectlombok:lombok"
     annotationProcessor "org.projectlombok:lombok"
+    annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
+    annotationProcessor("org.mapstruct:mapstruct-processor:$mapstructVersion")
+
 
     developmentOnly "org.springframework.boot:spring-boot-docker-compose"
 

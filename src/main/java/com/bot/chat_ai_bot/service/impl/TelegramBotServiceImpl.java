@@ -1,7 +1,9 @@
 package com.bot.chat_ai_bot.service.impl;
 
+import com.bot.chat_ai_bot.mapper.TelegramBotMapper;
 import com.bot.chat_ai_bot.service.GeminiService;
 import com.bot.chat_ai_bot.service.TelegramBotService;
+import com.bot.chat_ai_bot.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,8 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import javax.naming.NotContextException;
+import java.math.BigInteger;
 import java.util.Map;
 
 @Service
@@ -29,6 +33,8 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
     private String stickerId;
 
     private final GeminiService geminiService;
+    private final UserService userService;
+    private final TelegramBotMapper telegramBotMapper;
 
     @Override
     public void update(Map<String, Object> updateMap) {}
@@ -45,11 +51,24 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
                 outSticker.setSticker(new InputFile(stickerId));
                 execute(outSticker);
                 outMessage.setChatId(inMessage.getChatId());
+
                 outMessage.setText(geminiService.askGemini(inMessage.getText()));
 
                 execute(outMessage);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
+
+                userService.saveUser(
+                        telegramBotMapper.toUserDto(
+                                BigInteger.valueOf(inMessage.getFrom().getId()), //userId
+                                inMessage.getFrom().getFirstName(),
+                                inMessage.getFrom().getLastName(),
+                                inMessage.getFrom().getUserName(),
+                                inMessage.getFrom().getLanguageCode(),
+                                String.valueOf(inMessage.getChat().getId())
+                        )
+                );
+
+            } catch (TelegramApiException ex) {
+                throw new RuntimeException(ex);
             }
 
         }
@@ -65,17 +84,4 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
         return botToken;
     }
 
-    private void processUpdate(Update update) {
-        try {
-            if(update.hasMessage() && update.getMessage().hasText()) {
-                String chatId = update.getMessage().getChatId().toString();
-                String incomingText = update.getMessage().getText();
-                SendMessage message = new SendMessage(chatId, "You are written: " + incomingText);
-                execute(message);
-            }
-        } catch (TelegramApiException ex) {
-            System.err.println("System error: " + ex.getMessage());
-
-        }
-    }
 }
