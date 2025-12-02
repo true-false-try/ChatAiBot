@@ -29,7 +29,7 @@ public class SessionMessageEntity {
         @JoinColumn(name = "session_id")
         SessionEntity session;
 
-        String role;
-        String content;
+        String request;
+        String response;
         Long createdAt;
 }

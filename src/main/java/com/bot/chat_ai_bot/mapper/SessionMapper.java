@@ -1,7 +1,6 @@
 package com.bot.chat_ai_bot.mapper;
 
 import com.bot.chat_ai_bot.dto.UserDto;
-import com.bot.chat_ai_bot.entity.Mood;
 import com.bot.chat_ai_bot.entity.SessionEntity;
 import com.bot.chat_ai_bot.entity.UserEntity;
 import org.mapstruct.Mapper;
