@@ -1,5 +1,6 @@
 package com.bot.chat_ai_bot.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,13 +24,15 @@ import java.math.BigInteger;
 public class SessionMessageEntity {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
-        BigInteger id;
+        private BigInteger id;
 
         @ManyToOne
         @JoinColumn(name = "session_id")
-        SessionEntity session;
+        private SessionEntity session;
 
-        String request;
-        String response;
-        Long createdAt;
+        @Column(columnDefinition = "LONGTEXT")
+        private String request;
+        @Column(columnDefinition = "LONGTEXT")
+        private String response;
+        private Long createdAt;
 }

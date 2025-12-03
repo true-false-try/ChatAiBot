@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,14 +24,14 @@ import java.util.UUID;
 @AllArgsConstructor
 public class SessionEntity {
         @Id
-        UUID id;
+        private UUID id;
 
         @ManyToOne
         @JoinColumn(name = "user_id")
-        UserEntity user;
-        Long createdAt;
-        Long updatedAt;
+        private UserEntity user;
+        private Long createdAt;
+        private Long updatedAt;
 
         @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
-        List<SessionMessageEntity> messages;
+        private List<SessionMessageEntity> messages = new ArrayList<>();
 }

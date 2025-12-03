@@ -27,15 +27,15 @@ import java.util.Map;
 public class RiskFlagEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    BigInteger id;
+    private BigInteger id;
 
     @ManyToOne
     @JoinColumn(name ="user_id")
-    UserEntity user;
+    private UserEntity user;
 
     @Convert(converter = JsonMapConverter.class)
-    Map<String, Object> flag;
+    private Map<String, Object> flag;
 
     @Column(name = "triggered_at")
-    Long triggeredAt;
+    private Long triggeredAt;
 }
