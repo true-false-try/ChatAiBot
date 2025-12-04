@@ -9,5 +9,5 @@ import java.math.BigInteger;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface TelegramBotMapper {
-    UserDto toUserDto(BigInteger userId, String firstName, String lastName, String username, String languageCode, String chatId);
+    UserDto toUserDto(BigInteger userId, String firstName, String lastName, String username, Long createdAt, String languageCode, String chatId);
 }

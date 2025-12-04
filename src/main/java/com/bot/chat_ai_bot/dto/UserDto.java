@@ -7,6 +7,7 @@ public record UserDto (
         String firstName,
         String lastName,
         String userName,
+        Long createdAt,
         String languageCode,
         String chatId
 ) {}

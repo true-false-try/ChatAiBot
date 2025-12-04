@@ -62,6 +62,7 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
                                 inMessage.getFrom().getFirstName(),
                                 inMessage.getFrom().getLastName(),
                                 inMessage.getFrom().getUserName(),
+                                Long.valueOf(inMessage.getDate()),
                                 inMessage.getFrom().getLanguageCode(),
                                 String.valueOf(inMessage.getChat().getId())
                         ),
