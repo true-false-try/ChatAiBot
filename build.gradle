@@ -34,12 +34,15 @@ ext {
     postgresVersion = "42.7.8"
     springBootStarterVersion = "4.0.0"
     mapstructVersion = "1.6.3"
+    linguaVersion = "1.2.2"
+    deeplJavaVersion = "1.12.0"
+    translatorVersion = "1.0.0"
 }
 
 
 dependencies {
     implementation "org.springframework.boot:spring-boot-starter-web"
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa:$springBootStarterVersion")
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootStarterVersion"
     implementation "com.google.genai:google-genai:$geminiVersion"
     implementation "io.github.cdimascio:dotenv-java:$dotenvVersion"
     implementation "org.springframework.boot:spring-boot-starter-data-redis"
@@ -48,7 +51,9 @@ dependencies {
     implementation "org.apache.httpcomponents.client5:httpclient5:$httpcomponentsVersion"
     implementation "org.apache.httpcomponents.core5:httpcore5-h2:$httpcomponentsVersion"
     implementation "org.postgresql:postgresql:$postgresVersion"
-    implementation("org.mapstruct:mapstruct:$mapstructVersion")
+    implementation "org.mapstruct:mapstruct:$mapstructVersion"
+    implementation "com.github.pemistahl:lingua:$linguaVersion"
+    implementation "com.deepl.api:deepl-java:$deeplJavaVersion"
 
     compileOnly "org.projectlombok:lombok"
     annotationProcessor "org.projectlombok:lombok"

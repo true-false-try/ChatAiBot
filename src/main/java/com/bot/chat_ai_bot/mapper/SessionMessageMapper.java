@@ -15,5 +15,6 @@ public interface SessionMessageMapper {
     @Mapping(target = "session", source = "sessionEntity")
     @Mapping(target = "request", source = "userRequest")
     @Mapping(target = "response", source = "geminiResponse")
-    SessionMessageEntity mapToSessionEntity(SessionEntity sessionEntity, String userRequest, String geminiResponse);
+    @Mapping(target = "language", source = "languageContext")
+    SessionMessageEntity mapToSessionEntity(SessionEntity sessionEntity, String userRequest, String geminiResponse, String languageContext);
 }

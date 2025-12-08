@@ -4,6 +4,7 @@ CREATE TABLE session_message
     session_id UUID,
     request     TEXT,
     response    TEXT,
+    language    VARCHAR(50),
     created_at BIGINT,
     CONSTRAINT pk_session_message PRIMARY KEY (id)
 );
