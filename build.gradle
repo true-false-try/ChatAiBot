@@ -34,9 +34,7 @@ ext {
     postgresVersion = "42.7.8"
     springBootStarterVersion = "4.0.0"
     mapstructVersion = "1.6.3"
-    linguaVersion = "1.2.2"
-    deeplJavaVersion = "1.12.0"
-    translatorVersion = "1.0.0"
+    laguageDetectionVersion = "0.6"
 }
 
 
@@ -52,8 +50,7 @@ dependencies {
     implementation "org.apache.httpcomponents.core5:httpcore5-h2:$httpcomponentsVersion"
     implementation "org.postgresql:postgresql:$postgresVersion"
     implementation "org.mapstruct:mapstruct:$mapstructVersion"
-    implementation "com.github.pemistahl:lingua:$linguaVersion"
-    implementation "com.deepl.api:deepl-java:$deeplJavaVersion"
+    implementation "com.optimaize.languagedetector:language-detector:$laguageDetectionVersion"
 
     compileOnly "org.projectlombok:lombok"
     annotationProcessor "org.projectlombok:lombok"

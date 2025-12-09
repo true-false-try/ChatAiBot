@@ -5,10 +5,17 @@ import com.bot.chat_ai_bot.service.GeminiService;
 import com.bot.chat_ai_bot.service.PromptService;
 import com.bot.chat_ai_bot.service.TelegramBotService;
 import com.bot.chat_ai_bot.service.UserService;
-import com.github.pemistahl.lingua.api.IsoCode639_1;
-import com.github.pemistahl.lingua.api.Language;
-import com.github.pemistahl.lingua.api.LanguageDetector;
-import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
+
+import com.google.common.base.Optional;
+import com.optimaize.langdetect.LanguageDetector;
+import com.optimaize.langdetect.LanguageDetectorBuilder;
+import com.optimaize.langdetect.i18n.LdLocale;
+import com.optimaize.langdetect.ngram.NgramExtractors;
+import com.optimaize.langdetect.profiles.LanguageProfile;
+import com.optimaize.langdetect.profiles.LanguageProfileReader;
+import com.optimaize.langdetect.text.CommonTextObjectFactories;
+import com.optimaize.langdetect.text.TextObject;
+import com.optimaize.langdetect.text.TextObjectFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,10 +29,13 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 
-
+import java.io.IOException;
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+
+import static com.bot.chat_ai_bot.constants.ChatAiConstants.DEFAULT_LANGUAGE_PROMPT;
+import static com.bot.chat_ai_bot.constants.ChatAiConstants.NOT_PREFERRED_LANGUAGE;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +54,7 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
     private final TelegramBotMapper telegramBotMapper;
     private final PromptService promptService;
 
+
     @Override
     public void update(Map<String, Object> updateMap) {}
 
@@ -61,10 +72,8 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
                 outSticker.setSticker(new InputFile(stickerId));
                 execute(outSticker);
                 outMessage.setChatId(inMessage.getChatId());
-                String message = geminiService.askGemini(promptService.convertPromptContext(userMessage, userMessageLanguage));
 
-                outMessage.setText(geminiService.askGemini(message));
-
+                outMessage.setText(geminiService.askGemini(promptService.createPromptUsedLanguage(userMessage, userMessageLanguage)));
                 execute(outMessage);
 
                 userService.saveUser(
@@ -100,10 +109,25 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
     }
 
     private String getLanguageFromMessage(String userMessage) {
-        LanguageDetector detector = LanguageDetectorBuilder.fromAllLanguages().build();
-        Language language = detector.detectLanguageOf(userMessage);
-        Optional<IsoCode639_1> isoCode6391Optional = Optional.of(language.getIsoCode639_1());
-        return isoCode6391Optional.toString(); //SOTHO when we insert one or two words
+        List<LanguageProfile> languageProfiles;
+        try {
+            languageProfiles = new LanguageProfileReader().readAllBuiltIn();
+        } catch (IOException ex) {
+            return DEFAULT_LANGUAGE_PROMPT;
+        }
+
+        LanguageDetector languageDetector = LanguageDetectorBuilder.create(NgramExtractors.standard())
+                .withProfiles(languageProfiles)
+                .build();
+
+        TextObjectFactory textObjectFactory = CommonTextObjectFactories.forDetectingOnLargeText();
+
+        TextObject textObject = textObjectFactory.forText(userMessage);
+        Optional<LdLocale> detectedLocaleOptional = languageDetector.detect(textObject);
+
+        return detectedLocaleOptional.isPresent() ?
+                detectedLocaleOptional.get().getLanguage() :
+                NOT_PREFERRED_LANGUAGE;
     }
 
 }

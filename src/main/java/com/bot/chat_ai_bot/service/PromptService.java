@@ -2,14 +2,14 @@ package com.bot.chat_ai_bot.service;
 
 import com.bot.chat_ai_bot.dto.prompt.PsychologyPromptDto;
 
-import java.util.Locale;
+import static com.bot.chat_ai_bot.constants.ChatAiConstants.DEFAULT_LANGUAGE_PROMPT;
 
 public interface PromptService {
 
-    default String convertPromptContext(String prompt, String language) {
-        return !createPsychologyContext(prompt).getPromptContext().equalsIgnoreCase("en")
+    default String createPromptUsedLanguage(String prompt, String language) {
+        return !createPsychologyContext(prompt).getPromptContext().equalsIgnoreCase(DEFAULT_LANGUAGE_PROMPT)
                 ? String.format(
-                    "Translate this message '%s' following text into %s, preserving meaning and tone:",
+                    "Give me answer for this question '%s', give me answer at %s language.",
                     createPsychologyContext(prompt),
                     language)
                 : createPsychologyContext(prompt).getPromptContext();
