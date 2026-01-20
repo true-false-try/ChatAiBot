@@ -73,7 +73,7 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
                 execute(outSticker);
                 outMessage.setChatId(inMessage.getChatId());
 
-                outMessage.setText(geminiService.askGemini(promptService.createPromptUsedLanguage(userMessage, userMessageLanguage)));
+                outMessage.setText(geminiService.askGemini(promptService.createPsychologyContext(userMessage, userMessageLanguage).getPromptContext()));
                 execute(outMessage);
 
                 userService.saveUser(
