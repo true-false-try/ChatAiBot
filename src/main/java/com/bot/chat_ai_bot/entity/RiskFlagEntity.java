@@ -27,7 +27,7 @@ import java.util.Map;
 public class RiskFlagEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private BigInteger id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name ="user_id")

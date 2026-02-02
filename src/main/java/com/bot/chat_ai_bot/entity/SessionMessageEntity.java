@@ -24,15 +24,15 @@ import java.math.BigInteger;
 public class SessionMessageEntity {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private BigInteger id;
+        private Long id;
 
         @ManyToOne
         @JoinColumn(name = "session_id")
         private SessionEntity session;
 
-        @Column(columnDefinition = "LONGTEXT")
+        @Column(columnDefinition = "TEXT")
         private String request;
-        @Column(columnDefinition = "LONGTEXT")
+        @Column(columnDefinition = "TEXT")
         private String response;
         private String language;
         private Long createdAt;

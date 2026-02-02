@@ -26,7 +26,7 @@ import java.math.BigInteger;
 public class MoodHistoryEntity {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private BigInteger id;
+        private Long id;
 
         @ManyToOne
         @JoinColumn(name = "user_id")

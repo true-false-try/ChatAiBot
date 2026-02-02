@@ -11,7 +11,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class PromptServiceImpl implements PromptService {
-    private PromptRedisRepository promptRepository;
+    private final PromptRedisRepository promptRepository;
 
     @Override
     public PsychologyPromptDto createPsychologyContext(String userMessage, String language) {
