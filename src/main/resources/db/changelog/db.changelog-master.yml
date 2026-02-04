@@ -1,0 +1,63 @@
+databaseChangeLog:
+  # Include schema changes
+  - changeSet:
+      id: 1
+      author: "true-false-try"
+      preconditions:
+        - onFail: MARK_RAN
+          not:
+            tableExists:
+              tableName: main_user
+      changes:
+        - sqlFile:
+            path: db/changelog/schema/create-main_user.sql
+            relativeToChangelogFile: false
+  - changeSet:
+      id: 2
+      author: "true-false-try"
+      preconditions:
+        - onFail: MARK_RAN
+          not:
+            tableExists:
+              tableName: mood_history
+      changes:
+        - sqlFile:
+            path: db/changelog/schema/create-mood_history.sql
+            relativeToChangelogFile: false
+  - changeSet:
+      id: 3
+      author: "true-false-try"
+      preconditions:
+        - onFail: MARK_RAN
+          not:
+            tableExists:
+              tableName: risk_flag
+      changes:
+        - sqlFile:
+            path: db/changelog/schema/create-risk_flag.sql
+            relativeToChangelogFile: false
+  - changeSet:
+      id: 4
+      author: "true-false-try"
+      preconditions:
+        - onFail: MARK_RAN
+          not:
+            tableExists:
+              tableName: session
+      changes:
+        - sqlFile:
+            path: db/changelog/schema/create-session.sql
+            relativeToChangelogFile: false
+  - changeSet:
+      id: 5
+      author: "true-false-try"
+      preconditions:
+        - onFail: MARK_RAN
+          not:
+            tableExists:
+              tableName: session_message
+      changes:
+        - sqlFile:
+            path: db/changelog/schema/create-session_message.sql
+            relativeToChangelogFile: false
+  # Include data insertions

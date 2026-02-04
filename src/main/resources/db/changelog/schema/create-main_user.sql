@@ -1,6 +1,6 @@
-CREATE TABLE "main_user"
+CREATE TABLE main_user
 (
-    id               DECIMAL NOT NULL,
+    id               BIGINT NOT NULL,
     first_name       VARCHAR(255),
     last_name        VARCHAR(255),
     user_name        VARCHAR(255),

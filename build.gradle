@@ -52,6 +52,8 @@ dependencies {
     implementation "org.mapstruct:mapstruct:$mapstructVersion"
     implementation "com.optimaize.languagedetector:language-detector:$laguageDetectionVersion"
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-liquibase'
+
 
 
     compileOnly "org.projectlombok:lombok"

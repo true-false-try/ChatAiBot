@@ -34,6 +34,7 @@ public class RiskFlagEntity {
     private UserEntity user;
 
     @Convert(converter = JsonMapConverter.class)
+    @Column(columnDefinition = "jsonb")
     private Map<String, Object> flag;
 
     @Column(name = "triggered_at")
