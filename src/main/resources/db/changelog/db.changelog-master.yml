@@ -3,7 +3,7 @@ databaseChangeLog:
   - changeSet:
       id: 1
       author: "true-false-try"
-      preconditions:
+      preConditions:
         - onFail: MARK_RAN
           not:
             tableExists:
@@ -15,7 +15,7 @@ databaseChangeLog:
   - changeSet:
       id: 2
       author: "true-false-try"
-      preconditions:
+      preConditions:
         - onFail: MARK_RAN
           not:
             tableExists:
@@ -27,7 +27,7 @@ databaseChangeLog:
   - changeSet:
       id: 3
       author: "true-false-try"
-      preconditions:
+      preConditions:
         - onFail: MARK_RAN
           not:
             tableExists:
@@ -39,7 +39,7 @@ databaseChangeLog:
   - changeSet:
       id: 4
       author: "true-false-try"
-      preconditions:
+      preConditions:
         - onFail: MARK_RAN
           not:
             tableExists:
@@ -51,7 +51,7 @@ databaseChangeLog:
   - changeSet:
       id: 5
       author: "true-false-try"
-      preconditions:
+      preConditions:
         - onFail: MARK_RAN
           not:
             tableExists:
@@ -60,4 +60,24 @@ databaseChangeLog:
         - sqlFile:
             path: db/changelog/schema/create-session_message.sql
             relativeToChangelogFile: false
+  - changeSet:
+      id: 6
+      author: "true-false-try"
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            tableExists:
+              tableName: system_prompt
+      changes:
+        - sqlFile:
+            path: db/changelog/schema/create-system_prompt.sql
+            relativeToChangelogFile: false
+
   # Include data insertions
+  - changeSet:
+      id: 7
+      author: "true-false-try"
+      changes:
+        - sqlFile:
+            path: db/changelog/data/insert-system_prompt.sql
+            relativeToChangelogFile: false

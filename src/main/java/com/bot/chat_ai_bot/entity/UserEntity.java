@@ -13,7 +13,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +24,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserEntity {
+    private static final String USER = "user";
 
     @Id
     private Long id;
@@ -41,12 +41,13 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     private Mood currentMood;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = USER, cascade = CascadeType.ALL)
     private List<SessionEntity> sessions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = USER, cascade = CascadeType.ALL)
     private List<MoodHistoryEntity> moodHistories = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = USER, cascade = CascadeType.ALL)
     private List<RiskFlagEntity> riskFlags = new ArrayList<>();
+
 }

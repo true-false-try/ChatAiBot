@@ -1,6 +1,8 @@
 package com.bot.chat_ai_bot.service.impl;
 
+import com.bot.chat_ai_bot.dto.prompt.PsychologyPromptDto;
 import com.bot.chat_ai_bot.mapper.TelegramBotMapper;
+import com.bot.chat_ai_bot.repository.UserRepository;
 import com.bot.chat_ai_bot.service.GeminiService;
 import com.bot.chat_ai_bot.service.PromptService;
 import com.bot.chat_ai_bot.service.TelegramBotService;
@@ -67,18 +69,21 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
                 SendSticker outSticker = new SendSticker();
                 String userMessage = inMessage.getText();
                 String userMessageLanguage = getLanguageFromMessage(userMessage);
+                BigInteger userId = BigInteger.valueOf(inMessage.getFrom().getId());
 
                 outSticker.setChatId(inMessage.getChatId().toString());
                 outSticker.setSticker(new InputFile(stickerId));
                 execute(outSticker);
                 outMessage.setChatId(inMessage.getChatId());
 
-                outMessage.setText(geminiService.askGemini(promptService.createPsychologyContext(userMessage, userMessageLanguage).getPromptContext()));
+                PsychologyPromptDto psychologyPromptDto = promptService.createPsychologyContext(userMessageLanguage, inMessage.getChatId().toString());
+
+                outMessage.setText(geminiService.askGemini(createUserPrompt(psychologyPromptDto, userMessage)));
                 execute(outMessage);
 
                 userService.saveUser(
                         telegramBotMapper.toUserDto(
-                                BigInteger.valueOf(inMessage.getFrom().getId()), //userId
+                                userId,
                                 inMessage.getFrom().getFirstName(),
                                 inMessage.getFrom().getLastName(),
                                 inMessage.getFrom().getUserName(),
@@ -128,6 +133,10 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
         return detectedLocaleOptional.isPresent() ?
                 detectedLocaleOptional.get().getLanguage() :
                 NOT_PREFERRED_LANGUAGE;
+    }
+
+    private String createUserPrompt(PsychologyPromptDto psychologyPromptDto, String userPrompt) {
+        return psychologyPromptDto.getPromptContext().concat("USER_MESSAGE: ").concat(userPrompt);
     }
 
 }
