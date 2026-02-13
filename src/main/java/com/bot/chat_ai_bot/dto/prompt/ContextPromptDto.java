@@ -10,6 +10,6 @@ import lombok.ToString;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class PsychologyPromptDto {
+public class ContextPromptDto {
     private String promptContext;
 }

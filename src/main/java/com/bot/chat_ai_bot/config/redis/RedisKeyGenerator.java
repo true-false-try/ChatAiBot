@@ -14,6 +14,7 @@ public class RedisKeyGenerator implements KeyGenerator {
 
     @Override
     public @NonNull Object generate(Object target, Method method, @Nullable Object... params) {
-        return "language:" + params[0] +"|chatId:" + params[1];
+        return "language:" + params[0];
     }
+
 }

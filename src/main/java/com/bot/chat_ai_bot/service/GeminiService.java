@@ -1,5 +1,7 @@
 package com.bot.chat_ai_bot.service;
 
+import com.bot.chat_ai_bot.dto.prompt.UserPromptDto;
+
 public interface GeminiService  {
-    String askGemini(String prompt);
+    String askGemini(UserPromptDto userPromptDto);
 }

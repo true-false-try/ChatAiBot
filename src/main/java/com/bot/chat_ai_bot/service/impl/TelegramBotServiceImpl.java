@@ -1,8 +1,9 @@
 package com.bot.chat_ai_bot.service.impl;
 
-import com.bot.chat_ai_bot.dto.prompt.PsychologyPromptDto;
+import com.bot.chat_ai_bot.config.redis.RedisKeyGenerator;
+import com.bot.chat_ai_bot.dto.prompt.ContextPromptDto;
+import com.bot.chat_ai_bot.dto.prompt.UserPromptDto;
 import com.bot.chat_ai_bot.mapper.TelegramBotMapper;
-import com.bot.chat_ai_bot.repository.UserRepository;
 import com.bot.chat_ai_bot.service.GeminiService;
 import com.bot.chat_ai_bot.service.PromptService;
 import com.bot.chat_ai_bot.service.TelegramBotService;
@@ -20,6 +21,8 @@ import com.optimaize.langdetect.text.TextObject;
 import com.optimaize.langdetect.text.TextObjectFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -36,6 +39,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
+import static com.bot.chat_ai_bot.config.redis.constants.RedisConstants.PSY_BOT;
 import static com.bot.chat_ai_bot.constants.ChatAiConstants.DEFAULT_LANGUAGE_PROMPT;
 import static com.bot.chat_ai_bot.constants.ChatAiConstants.NOT_PREFERRED_LANGUAGE;
 
@@ -51,10 +55,15 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
     @Value("${sticker.id}")
     private String stickerId;
 
+    private static final String USER_MESSAGE = " USER_MESSAGE: ";
+
     private final GeminiService geminiService;
     private final UserService userService;
     private final TelegramBotMapper telegramBotMapper;
     private final PromptService promptService;
+    private final RedisKeyGenerator redisKeyGenerator;
+    private final CacheManager cacheManager;
+
 
 
     @Override
@@ -76,9 +85,9 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
                 execute(outSticker);
                 outMessage.setChatId(inMessage.getChatId());
 
-                PsychologyPromptDto psychologyPromptDto = promptService.createPsychologyContext(userMessageLanguage, inMessage.getChatId().toString());
-
-                outMessage.setText(geminiService.askGemini(createUserPrompt(psychologyPromptDto, userMessage)));
+                boolean hasCacheKey = checkedKeyIsInCache(userMessageLanguage);
+                ContextPromptDto contextPromptDto = promptService.createPsychologyContext(userMessageLanguage);
+                outMessage.setText(geminiService.askGemini(createUserPrompt(contextPromptDto, userMessage, hasCacheKey)));
                 execute(outMessage);
 
                 userService.saveUser(
@@ -135,8 +144,24 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
                 NOT_PREFERRED_LANGUAGE;
     }
 
-    private String createUserPrompt(PsychologyPromptDto psychologyPromptDto, String userPrompt) {
-        return psychologyPromptDto.getPromptContext().concat("USER_MESSAGE: ").concat(userPrompt);
+    private UserPromptDto createUserPrompt(ContextPromptDto contextPromptDto, String userPrompt, boolean hasCacheKey) {
+        if (hasCacheKey) {
+            return UserPromptDto.builder()
+                    .userPromptContext(USER_MESSAGE.concat(userPrompt))
+                    .build();
+        } else
+            return UserPromptDto.builder()
+                    .userPromptContext(contextPromptDto.getPromptContext()
+                            .concat(USER_MESSAGE
+                                    .concat(userPrompt)))
+                    .build();
+    }
+
+    private boolean checkedKeyIsInCache(String userMessageLanguage) {
+        Cache cache = cacheManager.getCache(PSY_BOT);
+        if (cache == null) return false;
+        Object generatedKey = redisKeyGenerator.generate(this, null, userMessageLanguage);
+        return cache.get(generatedKey) != null;
     }
 
 }

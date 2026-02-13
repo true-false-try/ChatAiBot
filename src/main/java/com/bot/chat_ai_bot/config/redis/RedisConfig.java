@@ -1,5 +1,5 @@
 package com.bot.chat_ai_bot.config.redis;
-import com.bot.chat_ai_bot.dto.prompt.PsychologyPromptDto;
+import com.bot.chat_ai_bot.dto.prompt.ContextPromptDto;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -22,7 +22,7 @@ public class RedisConfig {
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofHours(24))
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new JacksonJsonRedisSerializer<>(PsychologyPromptDto.class)))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new JacksonJsonRedisSerializer<>(ContextPromptDto.class)))
                 .disableCachingNullValues();
 
         return RedisCacheManager.builder(connectionFactory)
