@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -76,19 +77,27 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
                 Message inMessage = update.getMessage();
                 SendMessage outMessage = new SendMessage();
                 SendSticker outSticker = new SendSticker();
+
+                String chatId = inMessage.getChatId().toString();
                 String userMessage = inMessage.getText();
                 String userMessageLanguage = getLanguageFromMessage(userMessage);
                 BigInteger userId = BigInteger.valueOf(inMessage.getFrom().getId());
 
-                outSticker.setChatId(inMessage.getChatId().toString());
+                outSticker.setChatId(chatId);
                 outSticker.setSticker(new InputFile(stickerId));
-                execute(outSticker);
+                Message stickerMsg = execute(outSticker);
                 outMessage.setChatId(inMessage.getChatId());
+
 
                 boolean hasCacheKey = checkedKeyIsInCache(userMessageLanguage);
                 ContextPromptDto contextPromptDto = promptService.createPsychologyContext(userMessageLanguage);
                 outMessage.setText(geminiService.askGemini(createUserPrompt(contextPromptDto, userMessage, hasCacheKey)));
                 execute(outMessage);
+
+                DeleteMessage deleteSticker = new DeleteMessage();
+                deleteSticker.setChatId(chatId);
+                deleteSticker.setMessageId(stickerMsg.getMessageId());
+                execute(deleteSticker);
 
                 userService.saveUser(
                         telegramBotMapper.toUserDto(
