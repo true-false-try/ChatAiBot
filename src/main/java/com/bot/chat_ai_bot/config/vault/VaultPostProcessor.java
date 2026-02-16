@@ -10,7 +10,7 @@ import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
 import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.EnvironmentPostProcessor;
+import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;

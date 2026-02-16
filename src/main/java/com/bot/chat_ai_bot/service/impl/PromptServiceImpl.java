@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 import static com.bot.chat_ai_bot.config.redis.constants.RedisConstants.PSYCHOLOGY_KEY_GENERATOR;
-import static com.bot.chat_ai_bot.config.redis.constants.RedisConstants.PSYCHOLOGY_MANAGER;
 import static com.bot.chat_ai_bot.config.redis.constants.RedisConstants.PSY_BOT;
 
 @Getter
@@ -21,7 +20,7 @@ public class PromptServiceImpl implements PromptService {
     private final SystemPromptRepository systemPromptRepository;
 
     @Override
-    @Cacheable(value = PSY_BOT, keyGenerator = PSYCHOLOGY_KEY_GENERATOR, cacheManager = PSYCHOLOGY_MANAGER)
+    @Cacheable(value = PSY_BOT, keyGenerator = PSYCHOLOGY_KEY_GENERATOR)
     public ContextPromptDto createPsychologyContext(String language) {
         Optional<SystemPromptEntity> systemPrompt =
                 systemPromptRepository.findById(language);

@@ -2,9 +2,8 @@ package com.bot.chat_ai_bot.service.impl;
 
 import com.bot.chat_ai_bot.config.redis.RedisKeyGenerator;
 import com.bot.chat_ai_bot.dto.prompt.ContextPromptDto;
-import com.bot.chat_ai_bot.dto.prompt.UserPromptDto;
 import com.bot.chat_ai_bot.mapper.TelegramBotMapper;
-import com.bot.chat_ai_bot.service.GeminiService;
+import com.bot.chat_ai_bot.service.AiService;
 import com.bot.chat_ai_bot.service.PromptService;
 import com.bot.chat_ai_bot.service.TelegramBotService;
 import com.bot.chat_ai_bot.service.UserService;
@@ -20,9 +19,8 @@ import com.optimaize.langdetect.text.CommonTextObjectFactories;
 import com.optimaize.langdetect.text.TextObject;
 import com.optimaize.langdetect.text.TextObjectFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -40,10 +38,10 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
-import static com.bot.chat_ai_bot.config.redis.constants.RedisConstants.PSY_BOT;
 import static com.bot.chat_ai_bot.constants.ChatAiConstants.DEFAULT_LANGUAGE_PROMPT;
 import static com.bot.chat_ai_bot.constants.ChatAiConstants.NOT_PREFERRED_LANGUAGE;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TelegramBotServiceImpl extends TelegramLongPollingBot implements TelegramBotService {
@@ -56,16 +54,10 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
     @Value("${sticker.id}")
     private String stickerId;
 
-    private static final String USER_MESSAGE = " USER_MESSAGE: ";
-
-    private final GeminiService geminiService;
+    private final AiService aiService;
     private final UserService userService;
     private final TelegramBotMapper telegramBotMapper;
     private final PromptService promptService;
-    private final RedisKeyGenerator redisKeyGenerator;
-    private final CacheManager cacheManager;
-
-
 
     @Override
     public void update(Map<String, Object> updateMap) {}
@@ -75,49 +67,29 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
         if(update.hasMessage() && update.getMessage().hasText()) {
             try {
                 Message inMessage = update.getMessage();
-                SendMessage outMessage = new SendMessage();
-                SendSticker outSticker = new SendSticker();
-
                 String chatId = inMessage.getChatId().toString();
                 String userMessage = inMessage.getText();
-                String userMessageLanguage = getLanguageFromMessage(userMessage);
-                BigInteger userId = BigInteger.valueOf(inMessage.getFrom().getId());
+                String lang = getLanguageFromMessage(userMessage);
 
-                outSticker.setChatId(chatId);
-                outSticker.setSticker(new InputFile(stickerId));
-                Message stickerMsg = execute(outSticker);
-                outMessage.setChatId(inMessage.getChatId());
+                Message stickerMsg = execute(new SendSticker(chatId, new InputFile(stickerId)));
 
+                ContextPromptDto context = promptService.createPsychologyContext(lang);
 
-                boolean hasCacheKey = checkedKeyIsInCache(userMessageLanguage);
-                ContextPromptDto contextPromptDto = promptService.createPsychologyContext(userMessageLanguage);
-                outMessage.setText(geminiService.askGemini(createUserPrompt(contextPromptDto, userMessage, hasCacheKey)));
-                execute(outMessage);
-
-                DeleteMessage deleteSticker = new DeleteMessage();
-                deleteSticker.setChatId(chatId);
-                deleteSticker.setMessageId(stickerMsg.getMessageId());
-                execute(deleteSticker);
-
-                userService.saveUser(
-                        telegramBotMapper.toUserDto(
-                                userId,
-                                inMessage.getFrom().getFirstName(),
-                                inMessage.getFrom().getLastName(),
-                                inMessage.getFrom().getUserName(),
-                                Long.valueOf(inMessage.getDate()),
-                                userMessageLanguage,
-                                String.valueOf(inMessage.getChat().getId())
-                        ),
-                        userMessage,
-                        outMessage.getText(),
-                        getLanguageFromMessage(userMessage)
+                String aiResponse = aiService.generateResponse(
+                        Long.parseLong(chatId),
+                        context,
+                        userMessage
                 );
 
-            } catch (TelegramApiException ex) {
-                throw new RuntimeException(ex);
-            }
+                execute(new SendMessage(chatId, aiResponse));
 
+                execute(new DeleteMessage(chatId, stickerMsg.getMessageId()));
+
+                saveUserData(inMessage, userMessage, aiResponse, lang);
+
+            } catch (TelegramApiException ex) {
+                log.error("Telegram error", ex);
+            }
         }
     }
 
@@ -129,6 +101,21 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
     @Override
     public String getBotToken() {
         return botToken;
+    }
+
+    private void saveUserData(Message inMessage, String request, String response, String language) {
+        userService.saveUser(
+                telegramBotMapper.toUserDto(
+                        BigInteger.valueOf(inMessage.getFrom().getId()),
+                        inMessage.getFrom().getFirstName(),
+                        inMessage.getFrom().getLastName(),
+                        inMessage.getFrom().getUserName(),
+                        Long.valueOf(inMessage.getDate()),
+                        language,
+                        inMessage.getChatId().toString()
+                ),
+                request, response, language
+        );
     }
 
     private String getLanguageFromMessage(String userMessage) {
@@ -152,25 +139,4 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
                 detectedLocaleOptional.get().getLanguage() :
                 NOT_PREFERRED_LANGUAGE;
     }
-
-    private UserPromptDto createUserPrompt(ContextPromptDto contextPromptDto, String userPrompt, boolean hasCacheKey) {
-        if (hasCacheKey) {
-            return UserPromptDto.builder()
-                    .userPromptContext(USER_MESSAGE.concat(userPrompt))
-                    .build();
-        } else
-            return UserPromptDto.builder()
-                    .userPromptContext(contextPromptDto.getPromptContext()
-                            .concat(USER_MESSAGE
-                                    .concat(userPrompt)))
-                    .build();
-    }
-
-    private boolean checkedKeyIsInCache(String userMessageLanguage) {
-        Cache cache = cacheManager.getCache(PSY_BOT);
-        if (cache == null) return false;
-        Object generatedKey = redisKeyGenerator.generate(this, null, userMessageLanguage);
-        return cache.get(generatedKey) != null;
-    }
-
 }

@@ -10,6 +10,6 @@ import java.util.UUID;
 
 @Repository
 public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
-
+    Optional<SessionEntity> findFirstByUserIdOrderByUpdatedAtDesc(Long userId);
     Optional<SessionEntity> findByUserId(BigInteger id);
 }

@@ -1,9 +1,9 @@
 package com.bot.chat_ai_bot.utils;
 
+import com.fasterxml.jackson.core.JacksonException;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
