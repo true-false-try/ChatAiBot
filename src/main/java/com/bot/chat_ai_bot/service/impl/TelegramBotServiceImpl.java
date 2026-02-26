@@ -1,9 +1,8 @@
 package com.bot.chat_ai_bot.service.impl;
 
-import com.bot.chat_ai_bot.config.redis.RedisKeyGenerator;
 import com.bot.chat_ai_bot.dto.prompt.ContextPromptDto;
 import com.bot.chat_ai_bot.mapper.TelegramBotMapper;
-import com.bot.chat_ai_bot.service.AiService;
+import com.bot.chat_ai_bot.service.ai.AiService;
 import com.bot.chat_ai_bot.service.PromptService;
 import com.bot.chat_ai_bot.service.TelegramBotService;
 import com.bot.chat_ai_bot.service.UserService;
