@@ -1,7 +1,6 @@
 package com.bot.chat_ai_bot.service.ai;
 
 import com.bot.chat_ai_bot.dto.prompt.ContextPromptDto;
-import com.bot.chat_ai_bot.repository.SystemPromptRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -15,7 +14,6 @@ import java.util.List;
 public class AiService {
     private final List<ChatModel> models;
     private final JpaChatMemory chatMemory;
-    private final SystemPromptRepository systemPromptRepository;
 
     public String generateResponse(Long chatId, ContextPromptDto contextPromptDto, String userPrompt){
         for (ChatModel model : models) {
