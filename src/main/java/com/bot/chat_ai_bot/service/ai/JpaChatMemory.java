@@ -1,11 +1,7 @@
 package com.bot.chat_ai_bot.service.ai;
 
-import com.bot.chat_ai_bot.entity.SessionEntity;
 import com.bot.chat_ai_bot.entity.SessionMessageEntity;
-import com.bot.chat_ai_bot.entity.UserEntity;
-import com.bot.chat_ai_bot.repository.SessionMessageRepository;
 import com.bot.chat_ai_bot.repository.SessionRepository;
-import com.bot.chat_ai_bot.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -14,10 +10,8 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,8 +19,6 @@ import java.util.stream.Stream;
 @AllArgsConstructor
 public class JpaChatMemory implements ChatMemory{
     private final SessionRepository sessionRepository;
-    private final SessionMessageRepository sessionMessageRepository;
-    private final UserRepository userRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -55,49 +47,11 @@ public class JpaChatMemory implements ChatMemory{
     }
 
     @Override
-    public void add(String conversationId, List<Message> messages) {
-        if (conversationId == null || !conversationId.matches("\\d+")) {
-            return;
-        }
-
-        Long userId = Long.parseLong(conversationId);
-        SessionEntity session = sessionRepository.findFirstByUserIdOrderByUpdatedAtDesc(userId)
-                .orElseGet(() -> createNewSession(userId));
-
-        String userRequest = "";
-        String aiResponse = "";
-
-        for (Message m : messages) {
-            if (m instanceof UserMessage) userRequest = m.getContent();
-            if (m instanceof AssistantMessage) aiResponse = m.getContent();
-        }
-
-        if (!userRequest.isEmpty() && !aiResponse.isEmpty()) {
-            SessionMessageEntity messageEntity = new SessionMessageEntity();
-            messageEntity.setSession(session);
-            messageEntity.setRequest(userRequest);
-            messageEntity.setResponse(aiResponse);
-            messageEntity.setCreatedAt(System.currentTimeMillis());
-
-            sessionMessageRepository.save(messageEntity);
-
-            session.setUpdatedAt(System.currentTimeMillis());
-            sessionRepository.save(session);
-        }
-    }
+    public void add(String conversationId, List<Message> messages) {}
 
     @Override
     public void clear(String conversationId) {
 
     }
 
-    private SessionEntity createNewSession(Long userId) {
-        UserEntity user = userRepository.findById(BigInteger.valueOf(userId)).orElseThrow();
-        SessionEntity session = new SessionEntity();
-        session.setId(UUID.randomUUID());
-        session.setUser(user);
-        session.setCreatedAt(System.currentTimeMillis());
-        session.setUpdatedAt(System.currentTimeMillis());
-        return sessionRepository.save(session);
-    }
 }

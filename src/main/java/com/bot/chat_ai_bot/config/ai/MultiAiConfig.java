@@ -13,15 +13,6 @@ public class MultiAiConfig {
 
     @Bean
     @Order(1)
-    public OpenAiChatModel geminiModel(
-            @Value("${gemini.uri}") String uri,
-            @Value("${gemini.token}") String key,
-            @Value("${gemini.model}") String model) {
-        return createModel(uri, key, model);
-    }
-
-    @Bean
-    @Order(2)
     public OpenAiChatModel groqModel(
             @Value("${groq.uri}") String uri,
             @Value("${groq.token}") String key,
@@ -30,11 +21,20 @@ public class MultiAiConfig {
     }
 
     @Bean
-    @Order(3)
+    @Order(2)
     public OpenAiChatModel cerebrasModel(
             @Value("${cerebras.uri}") String uri,
             @Value("${cerebras.token}") String key,
             @Value("${cerebras.model}") String model) {
+        return createModel(uri, key, model);
+    }
+
+    @Bean
+    @Order(3)
+    public OpenAiChatModel geminiModel(
+            @Value("${gemini.uri}") String uri,
+            @Value("${gemini.token}") String key,
+            @Value("${gemini.model}") String model) {
         return createModel(uri, key, model);
     }
 

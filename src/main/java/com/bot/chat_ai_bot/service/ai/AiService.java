@@ -30,7 +30,7 @@ public class AiService {
                     return response;
                 }
             } catch (Exception ex) {
-                System.err.println("Model didn't response, lost limits free call");
+                System.err.println("Model failed: " + model.getClass().getSimpleName());
                 ex.printStackTrace();
             }
         }

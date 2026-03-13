@@ -11,3 +11,6 @@ CREATE TABLE session_message
 
 ALTER TABLE session_message
     ADD CONSTRAINT FK_SESSION_MESSAGE_ON_SESSION FOREIGN KEY (session_id) REFERENCES "session" (id);
+
+CREATE INDEX idx_session_message_created
+    ON session_message(session_id, created_at DESC);
