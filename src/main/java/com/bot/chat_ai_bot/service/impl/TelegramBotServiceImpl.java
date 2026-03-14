@@ -123,6 +123,10 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
     }
 
     private boolean isCommandHandled(String userMessage, String chatId) throws TelegramApiException {
+        if (userMessage.equalsIgnoreCase("/start")) {
+            execute(new SendMessage(chatId, "Start... Send your message belong."));
+            return true;
+        }
         if (userMessage.equalsIgnoreCase("/clear")) {
             aiService.clearHistory(chatId);
             execute(new SendMessage(chatId, "\uD83E\uDDF9 History cleared. Context cleared!"));
