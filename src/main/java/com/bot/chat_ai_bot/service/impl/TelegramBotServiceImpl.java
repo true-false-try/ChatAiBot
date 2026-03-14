@@ -68,6 +68,11 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
                 Message inMessage = update.getMessage();
                 String chatId = inMessage.getChatId().toString();
                 String userMessage = inMessage.getText();
+
+                if (isCommandHandled(userMessage, chatId)) {
+                    return;
+                }
+
                 String lang = getLanguageFromMessage(userMessage);
 
                 Message stickerMsg = execute(new SendSticker(chatId, new InputFile(stickerId)));
@@ -75,7 +80,7 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
                 ContextPromptDto context = promptService.createPsychologyContext(lang);
 
                 String aiResponse = aiService.generateResponse(
-                        Long.parseLong(chatId),
+                        chatId,
                         context,
                         userMessage
                 );
@@ -115,6 +120,15 @@ public class TelegramBotServiceImpl extends TelegramLongPollingBot implements Te
                 ),
                 request, response, language
         );
+    }
+
+    private boolean isCommandHandled(String userMessage, String chatId) throws TelegramApiException {
+        if (userMessage.equalsIgnoreCase("/clear")) {
+            aiService.clearHistory(chatId);
+            execute(new SendMessage(chatId, "\uD83E\uDDF9 History cleared. Context cleared!"));
+            return true;
+        }
+        return false;
     }
 
     private String getLanguageFromMessage(String userMessage) {

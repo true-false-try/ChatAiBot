@@ -15,14 +15,14 @@ public class AiService {
     private final List<ChatModel> models;
     private final JpaChatMemory chatMemory;
 
-    public String generateResponse(Long chatId, ContextPromptDto contextPromptDto, String userPrompt){
+    public String generateResponse(String chatId, ContextPromptDto contextPromptDto, String userPrompt){
         for (ChatModel model : models) {
             try {
                 String response = ChatClient.create(model)
                         .prompt()
                         .system(contextPromptDto.getPromptContext())
                         .user(userPrompt)
-                        .advisors(new MessageChatMemoryAdvisor(chatMemory, String.valueOf(chatId), 20))
+                        .advisors(new MessageChatMemoryAdvisor(chatMemory, chatId, 20))
                         .call()
                         .content();
 
@@ -35,5 +35,9 @@ public class AiService {
             }
         }
         return "I have overload, please try again later...";
+    }
+
+    public void clearHistory(String chatId){
+        chatMemory.clear(chatId);
     }
 }

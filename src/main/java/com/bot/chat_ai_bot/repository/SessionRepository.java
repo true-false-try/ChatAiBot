@@ -1,6 +1,7 @@
 package com.bot.chat_ai_bot.repository;
 
 import com.bot.chat_ai_bot.entity.SessionEntity;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +13,7 @@ import java.util.UUID;
 public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
     Optional<SessionEntity> findFirstByUserIdOrderByUpdatedAtDesc(Long userId);
     Optional<SessionEntity> findByUserId(BigInteger id);
+
+    @Transactional
+    void deleteByUserId(Long userId);
 }
