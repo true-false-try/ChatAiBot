@@ -20,5 +20,5 @@ public interface UserMapper {
     @Mapping(target = "sessions", ignore = true)
     @Mapping(target = "moodHistories", ignore = true)
     @Mapping(target = "riskFlags", ignore = true)
-    UserEntity toUserEntity(UserDto userEntity);
+    UserEntity toUserEntity(UserDto userDto);
 }

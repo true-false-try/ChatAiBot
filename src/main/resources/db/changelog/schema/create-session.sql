@@ -4,6 +4,7 @@ CREATE TABLE session
     user_id    BIGINT,
     created_at BIGINT,
     updated_at BIGINT,
+    language VARCHAR(2),
     CONSTRAINT pk_session PRIMARY KEY (id)
 );
 

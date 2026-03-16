@@ -8,5 +8,6 @@ CREATE TABLE main_user
     last_interaction BIGINT,
     age_group        VARCHAR(255),
     current_mood     VARCHAR(255),
+    profile_language VARCHAR(2),
     CONSTRAINT pk_user PRIMARY KEY (id)
 );

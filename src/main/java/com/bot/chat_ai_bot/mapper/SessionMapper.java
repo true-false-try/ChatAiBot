@@ -17,6 +17,7 @@ public interface SessionMapper {
     @Mapping(target = "createdAt", expression = "java(Instant.now().getEpochSecond())")
     @Mapping(target = "updatedAt", expression = "java(Instant.now().getEpochSecond())")
     @Mapping(target = "user", source = "userEntity")
+    @Mapping(target = "language", expression = "java(sessionLanguage)")
     @Mapping(target = "messages", ignore = true)
-    SessionEntity toSessionEntity(UserDto userDto, UserEntity userEntity);
+    SessionEntity toSessionEntity(UserDto userDto, UserEntity userEntity, String sessionLanguage);
 }

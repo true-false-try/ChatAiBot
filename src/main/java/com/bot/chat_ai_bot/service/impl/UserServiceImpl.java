@@ -29,13 +29,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void saveUser(UserDto userDto, String request, String response, String languageContext){
+    public void saveUser(UserDto userDto, String request, String response, String language){
         UserEntity userEntity = userRepository.findById(userDto.userId())
                 .orElse(userMapper.toUserEntity(userDto));
 
         SessionEntity sessionEntity = sessionRepository.findByUserId(BigInteger.valueOf(Long.parseLong(userDto.chatId())))
-                .orElse(sessionMapper.toSessionEntity(userDto, userEntity));
-        SessionMessageEntity sessionMessageEntity = sessionMessageMapper.mapToSessionEntity(sessionEntity, request, response, languageContext);
+                .orElse(sessionMapper.toSessionEntity(userDto, userEntity, language));
+        SessionMessageEntity sessionMessageEntity = sessionMessageMapper.mapToSessionEntity(sessionEntity, request, response);
         sessionMessageEntity.setSession(sessionEntity);
         sessionEntity.getMessages().add(sessionMessageEntity);
 

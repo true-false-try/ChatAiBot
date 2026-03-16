@@ -8,6 +8,6 @@ public record UserDto (
         String lastName,
         String userName,
         Long createdAt,
-        String languageCode,
-        String chatId
+        String chatId,
+        String profileLanguage
 ) {}

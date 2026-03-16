@@ -32,6 +32,5 @@ public class SessionMessageEntity {
         private String request;
         @Column(columnDefinition = "TEXT")
         private String response;
-        private String language;
         private Long createdAt;
 }

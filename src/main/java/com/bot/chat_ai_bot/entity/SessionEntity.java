@@ -33,6 +33,7 @@ public class SessionEntity {
         private UserEntity user;
         private Long createdAt;
         private Long updatedAt;
+        private String language;
 
         @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
         private List<SessionMessageEntity> messages = new ArrayList<>();

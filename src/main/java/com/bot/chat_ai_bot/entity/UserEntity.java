@@ -41,6 +41,8 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     private Mood currentMood;
 
+    private String profileLanguage;
+
     @OneToMany(mappedBy = USER, cascade = CascadeType.ALL)
     private List<SessionEntity> sessions = new ArrayList<>();
 
