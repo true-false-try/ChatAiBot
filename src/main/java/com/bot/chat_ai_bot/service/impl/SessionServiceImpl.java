@@ -1,5 +1,6 @@
 package com.bot.chat_ai_bot.service.impl;
 
+import com.bot.chat_ai_bot.entity.SessionEntity;
 import com.bot.chat_ai_bot.entity.SessionMessageEntity;
 import com.bot.chat_ai_bot.repository.SessionRepository;
 import com.bot.chat_ai_bot.service.SessionService;
@@ -11,6 +12,7 @@ import org.springframework.ai.chat.messages.UserMessage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -41,5 +43,10 @@ public class SessionServiceImpl implements SessionService {
     @Override
     public void clearSession(Long userId) {
         sessionRepository.deleteByUserId(userId);
+    }
+
+    @Override
+    public Optional<SessionEntity> getSession(Long userId) {
+        return sessionRepository.findSessionEntityByUserId(userId);
     }
 }

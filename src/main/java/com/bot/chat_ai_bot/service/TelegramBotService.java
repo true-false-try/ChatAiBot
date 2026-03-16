@@ -1,6 +1,7 @@
 package com.bot.chat_ai_bot.service;
 
 import com.bot.chat_ai_bot.dto.prompt.ContextPromptDto;
+import com.bot.chat_ai_bot.entity.SessionEntity;
 import com.bot.chat_ai_bot.mapper.TelegramBotMapper;
 import com.bot.chat_ai_bot.service.ai.AiService;
 
@@ -52,6 +53,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     private final AiService aiService;
     private final UserService userService;
+    private final SessionService sessionService;
     private final TelegramBotMapper telegramBotMapper;
     private final PromptService promptService;
 
@@ -60,27 +62,29 @@ public class TelegramBotService extends TelegramLongPollingBot {
         if(update.hasMessage() && update.getMessage().hasText()) {
             try {
                 Message inMessage = update.getMessage();
-                String chatId = inMessage.getChatId().toString();
+                String userChatId = inMessage.getChatId().toString();
 
                 String userMessage = inMessage.getText();
 
-                if (isCommandHandled(userMessage, chatId)) {return;}
+                if (isCommandHandled(userMessage, userChatId)) {return;}
 
-                String sessionLanguage = getLanguageFromMessage(userMessage);
+                String sessionLanguage = sessionService.getSession(Long.valueOf(userChatId))
+                        .map(SessionEntity::getLanguage)
+                        .orElseGet(() -> getLanguageFromMessage(userMessage));
 
-                Message stickerMsg = execute(new SendSticker(chatId, new InputFile(stickerId)));
+                Message stickerMsg = execute(new SendSticker(userChatId, new InputFile(stickerId)));
 
                 ContextPromptDto context = promptService.createPsychologyContext(sessionLanguage);
 
                 String aiResponse = aiService.generateResponse(
-                        chatId,
+                        userChatId,
                         context,
                         userMessage
                 );
 
-                execute(new SendMessage(chatId, aiResponse));
+                execute(new SendMessage(userChatId, aiResponse));
 
-                execute(new DeleteMessage(chatId, stickerMsg.getMessageId()));
+                execute(new DeleteMessage(userChatId, stickerMsg.getMessageId()));
 
                 saveUserData(inMessage, userMessage, aiResponse, sessionLanguage);
 
@@ -129,6 +133,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
     }
 
     private String getLanguageFromMessage(String userMessage) {
+
         List<LanguageProfile> languageProfiles;
         try {
             languageProfiles = new LanguageProfileReader().read(List.of(FAVORITE_LANGUAGE, DEFAULT_LANGUAGE, NOT_PREFERRED_LANGUAGE));

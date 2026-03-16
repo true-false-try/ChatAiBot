@@ -3,7 +3,6 @@ import com.bot.chat_ai_bot.dto.prompt.ContextPromptDto;
 import com.bot.chat_ai_bot.entity.SystemPromptEntity;
 import com.bot.chat_ai_bot.repository.SystemPromptRepository;
 import com.bot.chat_ai_bot.service.PromptService;
-import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;

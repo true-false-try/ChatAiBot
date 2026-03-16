@@ -16,4 +16,8 @@ public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
 
     @Transactional
     void deleteByUserId(Long userId);
+
+    boolean existsByUserIdAndLanguageIsNotNull(Long userId);
+
+    Optional<SessionEntity> findSessionEntityByUserId(Long userId);
 }
