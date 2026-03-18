@@ -1,20 +1,14 @@
-package com.bot.chat_ai_bot.service;
+package com.bot.chat_ai_bot.service.telegram_bot;
 
 import com.bot.chat_ai_bot.dto.prompt.ContextPromptDto;
 import com.bot.chat_ai_bot.entity.SessionEntity;
 import com.bot.chat_ai_bot.mapper.TelegramBotMapper;
+import com.bot.chat_ai_bot.service.LanguageService;
+import com.bot.chat_ai_bot.service.PromptService;
+import com.bot.chat_ai_bot.service.SessionService;
+import com.bot.chat_ai_bot.service.UserService;
 import com.bot.chat_ai_bot.service.ai.AiService;
 
-import com.google.common.base.Optional;
-import com.optimaize.langdetect.LanguageDetector;
-import com.optimaize.langdetect.LanguageDetectorBuilder;
-import com.optimaize.langdetect.i18n.LdLocale;
-import com.optimaize.langdetect.ngram.NgramExtractors;
-import com.optimaize.langdetect.profiles.LanguageProfile;
-import com.optimaize.langdetect.profiles.LanguageProfileReader;
-import com.optimaize.langdetect.text.CommonTextObjectFactories;
-import com.optimaize.langdetect.text.TextObject;
-import com.optimaize.langdetect.text.TextObjectFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,13 +24,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 
-import java.io.IOException;
 import java.math.BigInteger;
-import java.util.List;
-
-import static com.bot.chat_ai_bot.constants.ChatAiConstants.DEFAULT_LANGUAGE;
-import static com.bot.chat_ai_bot.constants.ChatAiConstants.FAVORITE_LANGUAGE;
-import static com.bot.chat_ai_bot.constants.ChatAiConstants.NOT_PREFERRED_LANGUAGE;
 
 @Slf4j
 @Service
@@ -54,6 +42,8 @@ public class TelegramBotService extends TelegramLongPollingBot {
     private final AiService aiService;
     private final UserService userService;
     private final SessionService sessionService;
+    private final LanguageService languageService;
+    private final CommandService commandService;
     private final TelegramBotMapper telegramBotMapper;
     private final PromptService promptService;
 
@@ -66,11 +56,11 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
                 String userMessage = inMessage.getText();
 
-                if (isCommandHandled(userMessage, userChatId)) {return;}
+                if (commandService.handle(update, this)) {return;}
 
                 String sessionLanguage = sessionService.getSession(Long.valueOf(userChatId))
                         .map(SessionEntity::getLanguage)
-                        .orElseGet(() -> getLanguageFromMessage(userMessage));
+                        .orElseGet(() -> languageService.getLanguageFromMessage(userMessage));
 
                 Message stickerMsg = execute(new SendSticker(userChatId, new InputFile(stickerId)));
 
@@ -117,41 +107,5 @@ public class TelegramBotService extends TelegramLongPollingBot {
                 ),
                 request, response, sessionLanguage
         );
-    }
-
-    private boolean isCommandHandled(String userMessage, String chatId) throws TelegramApiException {
-        if (userMessage.equalsIgnoreCase("/start")) {
-            execute(new SendMessage(chatId, "Start... Send your message belong."));
-            return true;
-        }
-        if (userMessage.equalsIgnoreCase("/clear")) {
-            aiService.clearHistory(chatId);
-            execute(new SendMessage(chatId, "\uD83E\uDDF9 History cleared. Context cleared!"));
-            return true;
-        }
-        return false;
-    }
-
-    private String getLanguageFromMessage(String userMessage) {
-
-        List<LanguageProfile> languageProfiles;
-        try {
-            languageProfiles = new LanguageProfileReader().read(List.of(FAVORITE_LANGUAGE, DEFAULT_LANGUAGE, NOT_PREFERRED_LANGUAGE));
-        } catch (IOException ex) {
-            return DEFAULT_LANGUAGE;
-        }
-
-        LanguageDetector languageDetector = LanguageDetectorBuilder.create(NgramExtractors.standard())
-                .withProfiles(languageProfiles)
-                .build();
-
-        TextObjectFactory textObjectFactory = CommonTextObjectFactories.forDetectingOnLargeText();
-
-        TextObject textObject = textObjectFactory.forText(userMessage);
-        Optional<LdLocale> detectedLocaleOptional = languageDetector.detect(textObject);
-
-        return detectedLocaleOptional.isPresent() ?
-                detectedLocaleOptional.get().getLanguage() :
-                NOT_PREFERRED_LANGUAGE;
     }
 }

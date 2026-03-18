@@ -1,6 +1,6 @@
 package com.bot.chat_ai_bot.config;
 
-import com.bot.chat_ai_bot.service.TelegramBotService;
+import com.bot.chat_ai_bot.service.telegram_bot.TelegramBotService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
