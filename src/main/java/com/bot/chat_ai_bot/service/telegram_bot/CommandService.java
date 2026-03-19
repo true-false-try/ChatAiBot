@@ -10,8 +10,8 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.List;
 
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class CommandService {
     private final List<TelegramBotCommandStrategy> commandStrategies;
