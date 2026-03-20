@@ -46,7 +46,4 @@ public class AiService {
         return "I have overload, please try again later...";
     }
 
-    public void clearHistory(String chatId){
-        chatMemory.clear(chatId);
-    }
 }

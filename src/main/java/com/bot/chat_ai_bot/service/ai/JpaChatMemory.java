@@ -36,4 +36,5 @@ public class JpaChatMemory implements ChatMemory {
         Long userId = Long.parseLong(conversationId);
         sessionService.clearSession(userId);
     }
+
 }
