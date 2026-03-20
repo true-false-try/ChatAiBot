@@ -13,7 +13,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class CommandService {
+public class TelegramCommandService {
     private final List<TelegramBotCommandStrategy> commandStrategies;
 
     public boolean handle(Update update, DefaultAbsSender sender) {

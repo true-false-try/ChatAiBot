@@ -1,6 +1,6 @@
 package com.bot.chat_ai_bot.config;
 
-import com.bot.chat_ai_bot.service.telegram_bot.TelegramBotService;
+import com.bot.chat_ai_bot.controller.TelegramBotController;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +14,7 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 @RequiredArgsConstructor
 public class TelegramBotConfig {
     @Bean
-    public TelegramBotsApi telegramBotsApi(TelegramBotService bot) throws TelegramApiException {
+    public TelegramBotsApi telegramBotsApi(TelegramBotController bot) throws TelegramApiException {
         TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
         botsApi.registerBot(bot);
         return botsApi;

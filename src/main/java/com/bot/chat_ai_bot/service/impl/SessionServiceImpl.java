@@ -1,8 +1,11 @@
 package com.bot.chat_ai_bot.service.impl;
 
+import com.bot.chat_ai_bot.dto.prompt.ContextPromptDto;
 import com.bot.chat_ai_bot.entity.SessionEntity;
 import com.bot.chat_ai_bot.entity.SessionMessageEntity;
 import com.bot.chat_ai_bot.repository.SessionRepository;
+import com.bot.chat_ai_bot.service.LanguageService;
+import com.bot.chat_ai_bot.service.PromptService;
 import com.bot.chat_ai_bot.service.SessionService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,8 @@ import java.util.stream.Stream;
 @AllArgsConstructor
 public class SessionServiceImpl implements SessionService {
     private final SessionRepository sessionRepository;
+    private final LanguageService languageService;
+    private final PromptService promptService;
 
     @Override
     public List<Message> getSessionMessages(Long userId, int lastNumber) {
@@ -48,5 +53,17 @@ public class SessionServiceImpl implements SessionService {
     @Override
     public Optional<SessionEntity> getSession(Long userId) {
         return sessionRepository.findSessionEntityByUserId(userId);
+    }
+
+    @Override
+    public String getOrDetectLanguage(org.telegram.telegrambots.meta.api.objects.Message message) {
+        return getSession(message.getChatId())
+                .map(SessionEntity::getLanguage)
+                .orElseGet(() -> languageService.getLanguageFromMessage(message.getText()));
+    }
+
+    @Override
+    public ContextPromptDto createContext(String sessionLanguage) {
+       return promptService.createPsychologyContext(sessionLanguage);
     }
 }

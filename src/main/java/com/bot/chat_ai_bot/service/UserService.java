@@ -1,7 +1,7 @@
 package com.bot.chat_ai_bot.service;
 
-import com.bot.chat_ai_bot.dto.UserDto;
+import org.telegram.telegrambots.meta.api.objects.Message;
 
 public interface UserService {
-    void saveUser(UserDto userDto, String request, String response, String profileLanguage);
+    void saveUser(Message message, String response, String profileLanguage);
 }

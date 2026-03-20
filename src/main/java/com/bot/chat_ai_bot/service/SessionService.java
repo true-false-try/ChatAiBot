@@ -1,5 +1,6 @@
 package com.bot.chat_ai_bot.service;
 
+import com.bot.chat_ai_bot.dto.prompt.ContextPromptDto;
 import com.bot.chat_ai_bot.entity.SessionEntity;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,4 +13,6 @@ public interface SessionService {
     List<Message> getSessionMessages(Long userId, int lastNumber);
     void clearSession(Long userId);
     Optional<SessionEntity> getSession(Long userId);
+    String getOrDetectLanguage(org.telegram.telegrambots.meta.api.objects.Message message);
+    ContextPromptDto createContext(String sessionLanguage);
 }

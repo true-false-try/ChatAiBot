@@ -1,6 +1,8 @@
 package com.bot.chat_ai_bot.service.impl;
 
+import com.bot.chat_ai_bot.entity.SessionEntity;
 import com.bot.chat_ai_bot.service.LanguageService;
+import com.bot.chat_ai_bot.service.SessionService;
 import com.google.common.base.Optional;
 import com.optimaize.langdetect.LanguageDetector;
 import com.optimaize.langdetect.LanguageDetectorBuilder;
@@ -45,5 +47,4 @@ public class LanguageServiceImpl implements LanguageService {
                 detectedLocaleOptional.get().getLanguage() :
                 NOT_PREFERRED_LANGUAGE;
     }
-
 }
