@@ -1,7 +1,9 @@
 package com.bot.chat_ai_bot.service.ai;
 
+import com.bot.chat_ai_bot.dto.AiResponseDto;
 import com.bot.chat_ai_bot.dto.prompt.ContextPromptDto;
 import com.bot.chat_ai_bot.entity.SessionEntity;
+import com.bot.chat_ai_bot.mapper.AiMapper;
 import com.bot.chat_ai_bot.mapper.TelegramBotMapper;
 import com.bot.chat_ai_bot.service.LanguageService;
 import com.bot.chat_ai_bot.service.PromptService;
@@ -23,8 +25,9 @@ import java.util.List;
 public class AiService {
     private final List<ChatModel> models;
     private final JpaChatMemory chatMemory;
+    private final AiMapper aiMapper;
 
-    public String generateResponse(String chatId, ContextPromptDto contextPromptDto, String userPrompt){
+    public AiResponseDto generateResponse(String chatId, ContextPromptDto contextPromptDto, String userPrompt){
         for (ChatModel model : models) {
             try {
                 String response = ChatClient.create(model)
@@ -36,14 +39,14 @@ public class AiService {
                         .content();
 
                 if (response!= null && !response.isBlank()) {
-                    return response;
+                    return aiMapper.toAi(response);
                 }
             } catch (Exception ex) {
                 System.err.println("Model failed: " + model.getClass().getSimpleName());
                 ex.printStackTrace();
             }
         }
-        return "I have overload, please try again later...";
+        return aiMapper.toAi("I have overload, please try again later...");
     }
 
 }

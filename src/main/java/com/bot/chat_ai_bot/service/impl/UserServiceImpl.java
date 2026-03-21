@@ -1,5 +1,6 @@
 package com.bot.chat_ai_bot.service.impl;
 
+import com.bot.chat_ai_bot.dto.AiResponseDto;
 import com.bot.chat_ai_bot.dto.UserDto;
 import com.bot.chat_ai_bot.entity.SessionEntity;
 import com.bot.chat_ai_bot.entity.SessionMessageEntity;
@@ -33,7 +34,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void saveUser(Message message, String response, String language) {
+    public void saveUser(Message message, AiResponseDto response, String language) {
 
         UserDto userDto = telegramBotMapper.toUserDto(
                 message.getFrom(),

@@ -1,5 +1,6 @@
 package com.bot.chat_ai_bot.facade;
 
+import com.bot.chat_ai_bot.dto.AiResponseDto;
 import com.bot.chat_ai_bot.service.SessionService;
 import com.bot.chat_ai_bot.service.UserService;
 import com.bot.chat_ai_bot.service.ai.AiService;
@@ -15,11 +16,11 @@ public class TelegramChatFacade {
     private final UserService userService;
     private final AiService aiService;
 
-    public String processRequest(Message message) {
+    public AiResponseDto processRequest(Message message) {
         String chatId = message.getChatId().toString();
         String lang = sessionService.getOrDetectLanguage(message);
 
-        String aiResponse = aiService.generateResponse(
+        AiResponseDto aiResponse = aiService.generateResponse(
                 chatId,
                 sessionService.createContext(lang),
                 lang);

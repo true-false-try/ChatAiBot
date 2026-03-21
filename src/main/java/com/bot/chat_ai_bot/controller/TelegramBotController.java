@@ -1,5 +1,6 @@
 package com.bot.chat_ai_bot.controller;
 
+import com.bot.chat_ai_bot.dto.AiResponseDto;
 import com.bot.chat_ai_bot.facade.TelegramChatFacade;
 import com.bot.chat_ai_bot.service.telegram_bot.TelegramCommandService;
 import com.bot.chat_ai_bot.service.telegram_bot.TelegramMessageService;
@@ -37,10 +38,10 @@ public class TelegramBotController extends TelegramLongPollingBot {
             Message stickerMessage = null;
             try {
                 stickerMessage = execute(messageService.createStickerMessage(inMessage));
-                String textResponse = chatFacade.processRequest(inMessage);
+                AiResponseDto textResponse = chatFacade.processRequest(inMessage);
                 SendMessage messageToExecute = messageService.createTextMessage(
                         inMessage.getChatId().toString(),
-                        textResponse
+                        textResponse.response()
                 );
                 execute(messageToExecute);
             } catch (TelegramApiException ex) {
