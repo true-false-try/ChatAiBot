@@ -1,17 +1,7 @@
 services:
-  chat-ai-bot:
-    build: .
-    image: chat-ai-bot:latest
-    container_name: chat-ai-bot
-    restart: always
-    ports:
-      - "8091:8091"
-    env_file:
-      - .env
-    extra_hosts:
-      - "${VAULT_HOST}:${VAULT_HOST_IP}"
   postgres:
     image: postgres:latest
+    container_name: chat-ai-bot-db
     env_file:
       - .env
     environment:
@@ -25,3 +15,46 @@ services:
     restart: always
     ports:
       - "6379:6379"
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  chat-ai-bot:
+    build: ./chatbot
+    image: chat-ai-bot:latest
+    container_name: chat-ai-bot
+    restart: always
+    ports:
+      - "8091:8091"
+    env_file:
+      - .env
+    extra_hosts:
+      - "${VAULT_HOST}:${VAULT_HOST_IP}"
+    depends_on:
+      vault:
+        condition: service_started
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+volumes:
+  ollama_storage:
+  rabbitmq_data:
