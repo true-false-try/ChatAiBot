@@ -36,6 +36,7 @@ ext {
     mapstructVersion = "1.6.3"
     laguageDetectionVersion = "0.6"
     springAiVersion = "1.0.0-M3"
+    rabbitMqVersion = "3.2.8"
 }
 
 dependencies {
@@ -64,6 +65,7 @@ dependencies {
     implementation "io.github.cdimascio:dotenv-java:$dotenvVersion"
     implementation "org.apache.httpcomponents.client5:httpclient5:$httpcomponentsVersion"
     implementation "org.apache.httpcomponents.core5:httpcore5-h2:$httpcomponentsVersion"
+    implementation "org.springframework.amqp:spring-rabbit:$rabbitMqVersion"
 
 
     // 4. Lombok & Annotation Processors

@@ -15,6 +15,6 @@ public interface SessionMessageMapper {
     @Mapping(target = "createdAt", expression = "java(Instant.now().getEpochSecond())")
     @Mapping(target = "session", source = "sessionEntity")
     @Mapping(target = "request", source = "userRequest")
-    @Mapping(target = "response", source = "aiResponse.response()")
+    @Mapping(target = "response", expression = "java(aiResponse.response())")
     SessionMessageEntity mapToSessionEntity(SessionEntity sessionEntity, String userRequest, AiResponseDto aiResponse);
 }
