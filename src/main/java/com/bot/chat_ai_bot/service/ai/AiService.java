@@ -27,13 +27,13 @@ public class AiService {
     private final JpaChatMemory chatMemory;
     private final AiMapper aiMapper;
 
-    public AiResponseDto generateResponse(String chatId, ContextPromptDto contextPromptDto, String userPrompt){
+    public AiResponseDto generateResponse(String chatId, ContextPromptDto contextPromptDto, String userMessage){
         for (ChatModel model : models) {
             try {
                 String response = ChatClient.create(model)
                         .prompt()
                         .system(contextPromptDto.getPromptContext())
-                        .user(userPrompt)
+                        .user(userMessage)
                         .advisors(new MessageChatMemoryAdvisor(chatMemory, chatId, 20))
                         .call()
                         .content();
