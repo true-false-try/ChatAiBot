@@ -7,6 +7,8 @@ import com.bot.chat_ai_bot.entity.MoodHistoryEntity;
 import com.bot.chat_ai_bot.repository.MoodHistoryRepository;
 import com.bot.chat_ai_bot.repository.UserRepository;
 import com.bot.chat_ai_bot.service.MoodHistoryService;
+import com.bot.chat_ai_bot.service.ai.OllamaAnalysisService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,15 +28,15 @@ public class MoodHistoryServiceImpl implements MoodHistoryService {
     private final UserRepository userRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedisKeyService redisKeyService;
-    //private final OllamaAnalysisService ollamaService;
+    private final OllamaAnalysisService ollamaAnalysisService;
 
     @Override
+    @Transactional
     public void saveMood(MoodTaskDto task) {
         addAndCheckBatch(task).ifPresent(batch -> {
             log.info("Batch ready for user {}. Analyzing...", task.userId());
 
-            Mood detectedMood =  Mood.STRESSED;
-                    //ollamaService.analyzeMood(batch);
+            Mood detectedMood = ollamaAnalysisService.analyzeMood(batch);
 
             userRepository.findById(BigInteger.valueOf(task.userId())).ifPresent(user -> {
                 MoodHistoryEntity entity = new MoodHistoryEntity();
