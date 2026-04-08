@@ -50,6 +50,11 @@ public class MoodHistoryServiceImpl implements MoodHistoryService {
         });
     }
 
+    @Override
+    public void clearMood(Long userId) {
+        moodHistoryRepository.deleteByUserId(userId);
+    }
+
     private Optional<List<MoodTaskDto>> addAndCheckBatch(MoodTaskDto task) {
         String key = redisKeyService.getMoodBatchKey(task.userId());
         redisTemplate.opsForList().rightPush(key, task);

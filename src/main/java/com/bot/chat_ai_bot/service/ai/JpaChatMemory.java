@@ -1,6 +1,8 @@
 package com.bot.chat_ai_bot.service.ai;
 
+import com.bot.chat_ai_bot.service.MoodHistoryService;
 import com.bot.chat_ai_bot.service.SessionService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
@@ -13,6 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JpaChatMemory implements ChatMemory {
     private final SessionService sessionService;
+    private final MoodHistoryService moodHistoryService;
 
     @Override
     public List<Message> get(String conversationId, int lastN) {
@@ -29,12 +32,14 @@ public class JpaChatMemory implements ChatMemory {
     public void add(String conversationId, List<Message> messages) {}
 
     @Override
+    @Transactional
     public void clear(String conversationId) {
         if (conversationId == null || !conversationId.matches("\\d+")) {
             return;
         }
         Long userId = Long.parseLong(conversationId);
         sessionService.clearSession(userId);
+        moodHistoryService.clearMood(userId);
     }
 
 }

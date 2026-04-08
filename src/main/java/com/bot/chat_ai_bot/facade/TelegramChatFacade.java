@@ -18,6 +18,7 @@ public class TelegramChatFacade {
     private final UserService userService;
     private final AiService aiService;
     private final MoodProducer moodProducer;
+
     public AiResponseDto processRequest(Message message) {
         String chatId = message.getChatId().toString();
         String lang = sessionService.getOrDetectLanguage(message);
