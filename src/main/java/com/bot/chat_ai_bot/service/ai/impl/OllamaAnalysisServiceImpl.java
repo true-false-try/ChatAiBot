@@ -12,6 +12,7 @@ import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,15 +29,19 @@ public class OllamaAnalysisServiceImpl implements OllamaAnalysisService {
     public Mood analyzeMood(List<MoodTaskDto> batch) {
         String conversationHistory = batch.stream()
                 .map(task ->
-                        "user request --> " + task.userRequest() +
-                        "ai response --> " + task.aiResponse())
+                        "USER request --> " + task.userRequest() +
+                        " " +
+                        "AI response --> " + task.aiResponse())
                 .collect(Collectors.joining("\n"));
 
         PromptTemplate template = getPromptTemplate();
         Prompt prompt = template.create(Map.of(
-                "allowed_moods", List.of(Mood.values()),
+                "allowed_moods", List.of(Arrays.stream(
+                        Mood.values()).map(value -> value.name()
+                        .concat(" "))
+                        .toList()),
                 "history", conversationHistory,
-                "format_instructions", outputConverter.getJsonSchema()
+                "format_instructions", outputConverter.getFormat()
         ));
 
         try {

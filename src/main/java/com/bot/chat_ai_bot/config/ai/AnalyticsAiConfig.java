@@ -15,14 +15,14 @@ public class AnalyticsAiConfig {
 
     @Bean
     public OllamaChatModel analyticsModel(
-            @Value("spring.ai.ollama.base-url") String url,
-            @Value("spring.ai.ollama.chat.model") String model
+            @Value("${spring.ai.ollama.base-url}") String url,
+            @Value("${spring.ai.ollama.chat.model}") String model
     ) {
         return OllamaChatModel.builder()
                 .withOllamaApi(new OllamaApi(url))
                 .withDefaultOptions(OllamaOptions.builder()
                         .withModel(model)
-                        .withTemperature(0.2)
+                        .withTemperature(0.1)
                         .build())
                 .withObservationRegistry(ObservationRegistry.NOOP)
                 .withModelManagementOptions(ModelManagementOptions.builder()
