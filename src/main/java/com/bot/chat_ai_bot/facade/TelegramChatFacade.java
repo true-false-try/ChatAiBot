@@ -6,12 +6,15 @@ import com.bot.chat_ai_bot.service.SessionService;
 import com.bot.chat_ai_bot.service.UserService;
 import com.bot.chat_ai_bot.service.ai.AiService;
 import com.bot.chat_ai_bot.service.broker.MoodProducer;
+import groovy.util.logging.Slf4j;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
 
+@lombok.extern.slf4j.Slf4j
 @Component
+@Slf4j
 @AllArgsConstructor
 public class TelegramChatFacade {
     private final SessionService sessionService;
@@ -22,6 +25,7 @@ public class TelegramChatFacade {
     public AiResponseDto processRequest(Message message) {
         String chatId = message.getChatId().toString();
         String lang = sessionService.getOrDetectLanguage(message);
+        log.info("Run process chatting, chatId: {}, language: {}", chatId, lang);
 
         AiResponseDto aiResponse = aiService.generateResponse(
                 chatId,
