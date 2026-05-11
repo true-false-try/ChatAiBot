@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+@lombok.extern.slf4j.Slf4j
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -32,7 +33,7 @@ public class OllamaAnalysisServiceImpl implements OllamaAnalysisService {
                         " " +
                         "AI response: " + task.aiResponse())
                 .toList());
-
+        log.info("Analyzed ");
         PromptTemplate template = getPromptTemplate();
         Prompt prompt = template.create(Map.of(
                 "allowed_moods", List.of(Arrays.stream(

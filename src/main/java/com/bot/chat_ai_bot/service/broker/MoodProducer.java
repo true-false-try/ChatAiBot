@@ -16,6 +16,6 @@ public class MoodProducer {
 
     public void sendMoodRate(MoodTaskDto task) {
         rabbitTemplate.convertAndSend(rabbitMqDto.exchange(), rabbitMqDto.key(), task);
-        log.info("Message was sending: {}", task);
+        log.info("Message was sending to RabbitMQ, rabbitMqDtoExchange: {}, rabbitMqDtoKey: {}, userId: {}, chatId: {}", rabbitMqDto.exchange(), rabbitMqDto.key(), task.userId(), task.chatId());
     }
 }

@@ -25,17 +25,18 @@ public class TelegramChatFacade {
     public AiResponseDto processRequest(Message message) {
         String chatId = message.getChatId().toString();
         String lang = sessionService.getOrDetectLanguage(message);
-        log.info("Run process chatting, chatId: {}, language: {}", chatId, lang);
+        log.info("Run process request, chatId: {}, language: {}", chatId, lang);
 
         AiResponseDto aiResponse = aiService.generateResponse(
                 chatId,
                 sessionService.createContext(lang),
                 message.getText());
 
+        log.info("Before sending to mood analysis, userId: {}, chatId: {}, messageId: {}", message.getFrom().getId(), chatId, message.getMessageId());
         sendToMoodAnalysis(message, aiResponse);
 
         userService.saveUser(message, aiResponse, lang);
-
+        log.info("After saveUser, userId: {}, chatId: {}, messageId: {}", message.getFrom().getId(), chatId, message.getMessageId());
         return aiResponse;
     }
 

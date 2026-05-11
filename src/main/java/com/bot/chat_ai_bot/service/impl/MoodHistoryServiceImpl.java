@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,11 +31,13 @@ public class MoodHistoryServiceImpl implements MoodHistoryService {
     private final RedisKeyService redisKeyService;
     private final OllamaAnalysisService ollamaAnalysisService;
 
+    private final static int BATCH_SIZE = 5;
+
     @Override
     @Transactional
     public void saveMood(MoodTaskDto task) {
         addAndCheckBatch(task).ifPresent(batch -> {
-            log.info("Batch ready for user {}. Analyzing...", task.userId());
+            log.info("Saved mood, batch ready for user {}. Analyzing...", task.userId());
 
             Mood detectedMood = ollamaAnalysisService.analyzeMood(batch);
 
@@ -58,13 +61,14 @@ public class MoodHistoryServiceImpl implements MoodHistoryService {
     private Optional<List<MoodTaskDto>> addAndCheckBatch(MoodTaskDto task) {
         String key = redisKeyService.getMoodBatchKey(task.userId());
         redisTemplate.opsForList().rightPush(key, task);
-        redisTemplate.expire(key, Duration.ofMinutes(10));
+        Duration duration = Duration.ofMinutes(10);
+        redisTemplate.expire(key, duration);
         Long currentSize = redisTemplate.opsForList().size(key);
-
-        int BATCH_SIZE = 5;
+        log.info("Add batch key: {}, current size: {}, current time: {}, batch size: {}, expired time : {}", key, currentSize, Instant.now().getEpochSecond(), BATCH_SIZE, Instant.now().plus(duration).getEpochSecond());
         if (currentSize!= null && currentSize >= BATCH_SIZE) {
             List<Object> rawBatch = redisTemplate.opsForList().range(key, 0, -1);
             redisTemplate.delete(key);
+            log.info("Delete key: {} in redis, after expired time : {}", key, Instant.now().plus(duration).getEpochSecond());
             List<MoodTaskDto> batch = Objects.requireNonNull(rawBatch).stream()
                     .map(obj -> (MoodTaskDto) obj)
                     .toList();

@@ -33,17 +33,21 @@ public class TelegramBotController extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         if(update.hasMessage() && update.getMessage().hasText()) {
             Message inMessage = update.getMessage();
-            if (commandService.handle(update, this)) {return;}
+            log.info("Update received, updateId: {}, userId: {}, messageId: {}", update.getUpdateId(), inMessage.getFrom().getId(), inMessage.getMessageId());
 
+            if (commandService.handle(update, this)) {return;}
             Message stickerMessage = null;
             try {
                 stickerMessage = execute(messageService.createStickerMessage(inMessage));
+                log.info("Creating sticker, userId: {}, messageId: {}", inMessage.getFrom().getId(), inMessage.getMessageId());
                 AiResponseDto textResponse = chatFacade.processRequest(inMessage);
+                log.info("AI response, textResponseHashcode: {}", textResponse.response().hashCode());
                 SendMessage messageToExecute = messageService.createTextMessage(
                         inMessage.getChatId().toString(),
                         textResponse.response()
                 );
                 execute(messageToExecute);
+                log.info("Executing message,userId: {}, messageId: {}", inMessage.getFrom().getId(), inMessage.getMessageId());
             } catch (TelegramApiException ex) {
                 log.error("Error processing message from chatId: {}", inMessage.getChatId(), ex);
             } finally {
@@ -66,6 +70,7 @@ public class TelegramBotController extends TelegramLongPollingBot {
         if (stickerMessage != null) {
             try {
                 execute(messageService.removeStickerMessage(stickerMessage));
+                log.debug("Removing sticker, after bot's response");
             }catch (TelegramApiException e) {
                 log.error("Failed to delete sticker", e);
             }
