@@ -3,8 +3,8 @@ package com.bot.chat_ai_bot.service.ai.impl;
 import com.bot.chat_ai_bot.dto.broker.MoodTaskDto;
 import com.bot.chat_ai_bot.entity.Mood;
 import com.bot.chat_ai_bot.service.ai.OllamaAnalysisService;
-import groovy.util.logging.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-@lombok.extern.slf4j.Slf4j
 @Slf4j
 @Service
 @RequiredArgsConstructor

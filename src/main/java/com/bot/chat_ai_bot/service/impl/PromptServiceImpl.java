@@ -3,21 +3,18 @@ import com.bot.chat_ai_bot.dto.prompt.ContextPromptDto;
 import com.bot.chat_ai_bot.entity.SystemPromptEntity;
 import com.bot.chat_ai_bot.repository.SystemPromptRepository;
 import com.bot.chat_ai_bot.service.PromptService;
-import groovy.util.logging.Slf4j;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 
 import static com.bot.chat_ai_bot.config.redis.constants.RedisConstants.PSYCHOLOGY_KEY_GENERATOR;
 import static com.bot.chat_ai_bot.config.redis.constants.RedisConstants.PSY_BOT;
+import static com.bot.chat_ai_bot.constants.ChatAiConstants.DEFAULT_LANGUAGE;
 
-@lombok.extern.slf4j.Slf4j
-@Getter
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class PromptServiceImpl implements PromptService {
     private final SystemPromptRepository systemPromptRepository;
@@ -25,16 +22,15 @@ public class PromptServiceImpl implements PromptService {
     @Override
     @Cacheable(value = PSY_BOT, keyGenerator = PSYCHOLOGY_KEY_GENERATOR)
     public ContextPromptDto createPsychologyContext(String language) {
-        Optional<SystemPromptEntity> systemPrompt =
-                systemPromptRepository.findById(language);
-        log.debug("Creating psychology context, prompt: {}, language: {}", systemPrompt.get().getPrompt(), language);
-        if (systemPrompt.isEmpty()) {
-            systemPrompt = systemPromptRepository.findById("en");
-            log.debug("Creating default psychology context, prompt: {}, language: {}", systemPrompt.get().getPrompt(), language);
-        }
+        SystemPromptEntity systemPrompt = systemPromptRepository.findById(language)
+                .orElseGet(() -> {
+                    log.debug("No prompt found for language '{}', falling back to 'en'", language);
+                    return systemPromptRepository.findById(DEFAULT_LANGUAGE)
+                            .orElseThrow(() -> new IllegalStateException("No system prompt for '" + language + "' or default 'en'"));
+                });
+        log.debug("Creating psychology context, language: {}, promptLength: {}", language, systemPrompt.getPrompt().length());
         return ContextPromptDto.builder()
-                .promptContext(
-                        systemPrompt.get().getPrompt().toString())
+                .promptContext(systemPrompt.getPrompt())
                 .build();
     }
 

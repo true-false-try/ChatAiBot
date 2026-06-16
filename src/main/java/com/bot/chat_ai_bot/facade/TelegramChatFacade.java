@@ -6,15 +6,14 @@ import com.bot.chat_ai_bot.service.SessionService;
 import com.bot.chat_ai_bot.service.UserService;
 import com.bot.chat_ai_bot.service.ai.AiService;
 import com.bot.chat_ai_bot.service.broker.MoodProducer;
-import groovy.util.logging.Slf4j;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
 
-@lombok.extern.slf4j.Slf4j
-@Component
 @Slf4j
+@Component
 @AllArgsConstructor
 public class TelegramChatFacade {
     private final SessionService sessionService;

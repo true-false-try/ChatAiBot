@@ -5,5 +5,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MoodHistoryRepository extends JpaRepository<MoodHistoryEntity, Long> {
+
+    @Transactional
     void deleteByUserId(Long userId);
 }
