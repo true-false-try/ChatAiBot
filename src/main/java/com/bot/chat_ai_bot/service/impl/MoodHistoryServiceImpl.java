@@ -4,6 +4,7 @@ import com.bot.chat_ai_bot.config.redis.service.RedisKeyService;
 import com.bot.chat_ai_bot.dto.broker.MoodTaskDto;
 import com.bot.chat_ai_bot.entity.Mood;
 import com.bot.chat_ai_bot.entity.MoodHistoryEntity;
+import com.bot.chat_ai_bot.mapper.MoodHistoryMapper;
 import com.bot.chat_ai_bot.repository.MoodHistoryRepository;
 import com.bot.chat_ai_bot.repository.UserRepository;
 import com.bot.chat_ai_bot.service.MoodHistoryService;
@@ -26,9 +27,10 @@ import java.util.Optional;
 public class MoodHistoryServiceImpl implements MoodHistoryService {
     private final MoodHistoryRepository moodHistoryRepository;
     private final UserRepository userRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, MoodTaskDto> moodBatchRedisTemplate;
     private final RedisKeyService redisKeyService;
     private final OllamaAnalysisService ollamaAnalysisService;
+    private final MoodHistoryMapper moodHistoryMapper;
 
     private static final int BATCH_SIZE = 5;
     private static final Duration BATCH_TTL = Duration.ofMinutes(10);
@@ -63,10 +65,7 @@ public class MoodHistoryServiceImpl implements MoodHistoryService {
 
             userRepository.findById(BigInteger.valueOf(task.userId())).ifPresentOrElse(
                     user -> {
-                        MoodHistoryEntity entity = new MoodHistoryEntity();
-                        entity.setUser(user);
-                        entity.setMood(detectedMood);
-                        entity.setTriggeredAt(System.currentTimeMillis());
+                        MoodHistoryEntity entity = moodHistoryMapper.toEntity(user, detectedMood);
                         moodHistoryRepository.save(entity);
                         log.info("Mood {} saved for user {}", detectedMood, task.userId());
                     },
@@ -83,39 +82,19 @@ public class MoodHistoryServiceImpl implements MoodHistoryService {
     @SuppressWarnings("unchecked")
     private Optional<List<MoodTaskDto>> pushAndDrainBatch(MoodTaskDto task) {
         String key = redisKeyService.getMoodBatchKey(task.userId());
-        String serialized = task.userId() + "|" + task.chatId() + "|"
-                + encode(task.userRequest()) + "|" + encode(task.aiResponse());
 
-        List<String> rawItems = (List<String>) redisTemplate.execute(
+        moodBatchRedisTemplate.opsForList().rightPush(key, task);
+        moodBatchRedisTemplate.expire(key, BATCH_TTL);
+
+        List<MoodTaskDto> drained = (List<MoodTaskDto>) moodBatchRedisTemplate.execute(
                 PUSH_AND_DRAIN_SCRIPT,
                 List.of(key),
-                serialized,
-                String.valueOf(BATCH_SIZE),
-                String.valueOf(BATCH_TTL.getSeconds())
+                String.valueOf(BATCH_SIZE)
         );
 
-        if (rawItems == null || rawItems.isEmpty()) {
+        if (drained == null || drained.isEmpty()) {
             return Optional.empty();
         }
-
-        List<MoodTaskDto> batch = rawItems.stream()
-                .map(this::deserialize)
-                .toList();
-        return Optional.of(batch);
-    }
-
-    private String encode(String value) {
-        return value == null ? "" : value.replace("|", "\\|");
-    }
-
-    private MoodTaskDto deserialize(Object raw) {
-        String s = raw.toString();
-        String[] parts = s.split("(?<!\\\\)\\|", 4);
-        return new MoodTaskDto(
-                Long.parseLong(parts[0]),
-                parts.length > 2 ? parts[2].replace("\\|", "|") : "",
-                parts.length > 3 ? parts[3].replace("\\|", "|") : "",
-                Long.parseLong(parts[1])
-        );
+        return Optional.of(drained);
     }
 }

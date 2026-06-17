@@ -81,9 +81,11 @@ dependencies {
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
 
     testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testImplementation "org.mockito:mockito-core"
+    testImplementation "org.mockito:mockito-junit-jupiter"
+    testAnnotationProcessor "org.projectlombok:lombok"
 }
 
 tasks.named('test') {
-    //useJUnitPlatform()
-    enabled = false
+    useJUnitPlatform()
 }
